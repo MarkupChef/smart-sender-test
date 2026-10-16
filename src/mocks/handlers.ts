@@ -83,6 +83,7 @@ export function createHandlers(baseUrl: string) {
       const missing: Record<string, string[]> = {};
       if (email === '') missing.email = ['The email field is required.'];
       if (password === '') missing.password = ['The password field is required.'];
+      if (fingerprint === '') missing.fingerprint = ['The fingerprint field is required.'];
       if (Object.keys(missing).length > 0) return invalid(missing);
       if (email !== user.email || password !== USER_PASSWORD) {
         return invalid({ password: ['These credentials do not match our records.'] });
@@ -93,7 +94,7 @@ export function createHandlers(baseUrl: string) {
     }),
 
     route('post', '/auth/token/issue', async (request) => {
-      const { device_session_token: token = '', fingerprint } = await readBody(request);
+      const { device_session_token: token = '', fingerprint = '' } = await readBody(request);
       const owner = db.deviceTokens.get(token);
       if (owner === undefined || owner !== fingerprint) {
         return invalid({ device_session_token: ['The device session token is invalid.'] });

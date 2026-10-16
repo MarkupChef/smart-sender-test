@@ -1,10 +1,12 @@
 import type { ZodType } from 'zod';
-import { ApiError, toApiError } from './api-error';
+import { ApiError, isApiError, toApiError } from './api-error';
 import { getFingerprint } from './fingerprint';
 
 // Transport (research R5, contracts/http-client.md). Guarantees:
 // - single-flight: concurrent first calls share one GET /csrf, concurrent 401s share one rotate;
-//   a 401 for a request sent before the latest rotate finished is retried without rotating again;
+//   a 401 for a request sent before the latest rotate settled reuses its outcome instead of rotating;
+// - onSessionExpired fires once per settled rotate, however many requests end up rejected by it;
+// - a transient rotate failure (network, 5xx) is rethrown as is and does not end the session;
 // - rotate never rotates: it is sent with auth 'none', so its own failure cannot start a rotate;
 // - each request is retried at most once per error class (419 → new CSRF, 401 → rotate).
 
@@ -24,13 +26,29 @@ export interface HttpClient {
 const sessionExpired = () =>
   new ApiError({ type: 'AuthenticationException', message: 'The session has ended.' });
 
+// Only a server verdict on the session ends it; a lost connection or a 5xx may still be renewed.
+const isTransient = (error: unknown) =>
+  !isApiError(error) ||
+  error.info.type === 'NetworkError' ||
+  (error.info.type === 'UnknownError' && error.info.status >= 500);
+
 export function createHttpClient(options: {
   baseUrl: string;
   onSessionExpired: () => void;
 }): HttpClient {
   let csrfPromise: Promise<string> | undefined;
   let rotatePromise: Promise<void> | undefined;
-  let completedRotations = 0;
+  let settledRotations = 0; // rotates that got a server verdict, successful or not
+  let lastRotateFailed = false;
+  let notifiedRotation = -1;
+
+  function endSession(): ApiError {
+    if (notifiedRotation !== settledRotations) {
+      notifiedRotation = settledRotations;
+      options.onSessionExpired();
+    }
+    return sessionExpired();
+  }
 
   async function send(opts: RequestOptions, csrf?: string): Promise<Response> {
     const headers = new Headers({ 'X-Requested-With': 'XMLHttpRequest' });
@@ -75,10 +93,13 @@ export function createHttpClient(options: {
       try {
         const body = { fingerprint: getFingerprint() };
         await execute({ method: 'POST', path: '/auth/token/rotate', body, auth: 'none' });
-        completedRotations += 1;
-      } catch {
-        options.onSessionExpired(); // once per failed rotate, however many requests wait on it
-        throw sessionExpired();
+        settledRotations += 1;
+        lastRotateFailed = false;
+      } catch (error) {
+        if (isTransient(error)) throw error;
+        settledRotations += 1;
+        lastRotateFailed = true;
+        throw endSession();
       } finally {
         rotatePromise = undefined;
       }
@@ -90,23 +111,23 @@ export function createHttpClient(options: {
     let csrfRetried = false;
     let authRetried = false;
     for (;;) {
-      const rotationsBeforeSend = completedRotations;
+      const rotationsBeforeSend = settledRotations;
       const csrfRequest = ensureCsrf();
       const csrf = await csrfRequest;
       const response = await send(opts, opts.method === 'GET' ? undefined : csrf);
 
       if (response.status === 419 && !csrfRetried) {
         csrfRetried = true;
+        await response.body?.cancel(); // release the connection before the retry
         if (csrfPromise === csrfRequest) csrfPromise = undefined; // concurrent 419s refetch once
         continue;
       }
       if (response.status === 401 && opts.auth === 'session') {
-        if (authRetried) {
-          options.onSessionExpired();
-          throw sessionExpired();
-        }
+        await response.body?.cancel();
+        if (authRetried) throw endSession();
         authRetried = true;
-        if (rotationsBeforeSend === completedRotations) await rotateOnce();
+        if (rotationsBeforeSend === settledRotations) await rotateOnce();
+        else if (lastRotateFailed) throw endSession();
         continue;
       }
       if (!response.ok) throw await toApiError(response);

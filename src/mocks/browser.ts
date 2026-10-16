@@ -13,8 +13,9 @@ declare global {
   }
 }
 
-export async function startMockWorker(): Promise<void> {
-  await setupWorker(...createHandlers(window.location.origin)).start({
+/** `baseUrl` must be the one the http client uses, or requests bypass the mock. */
+export async function startMockWorker(baseUrl: string): Promise<void> {
+  await setupWorker(...createHandlers(baseUrl)).start({
     onUnhandledFrame: 'bypass',
   });
   if (import.meta.env.DEV) {
