@@ -31,6 +31,8 @@ The client state lives inside the `createHttpClient` closure and is unique per c
 
 - `csrfPromise: Promise<string> | undefined` — shared CSRF fetch (single-flight)
 - `rotatePromise: Promise<void> | undefined` — shared rotate (single-flight), cleared in `finally`
+- `completedRotations: number` — successful rotates; a `401` for a request sent before the latest
+  rotate completed is retried without starting another rotate (late 401s cannot cause a second one)
 
 ## Guarantees (each is covered by a test or the README checklist)
 

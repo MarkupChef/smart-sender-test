@@ -61,7 +61,8 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
   3. On `419` (once per request): reset CSRF, `ensureCsrf()`, resend.
   4. On `401` from a request whose `auth` flag is `'session'` (once per request):
      `await rotateOnce()`, then resend. `rotateOnce()` shares the closure-held `rotatePromise`,
-     which is cleared in `finally`.
+     which is cleared in `finally`. A request that was sent before the latest rotate completed
+     (a `completedRotations` counter read before each send) is retried without rotating again.
   5. The rotate call itself is sent with `auth: 'none'`, so its own failure can never start a
      rotate. If rotate fails, `rotateOnce()` calls `onSessionExpired()` once in its
      own `catch` (so N concurrent waiters produce one call), and every waiter throws
