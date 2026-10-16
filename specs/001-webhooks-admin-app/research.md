@@ -44,7 +44,9 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
 
 - **Decision**: `createHttpClient({ baseUrl, onSessionExpired })`. The browser passes
   `window.location.origin` and tests pass `http://localhost`. Handlers are built by
-  `createHandlers(baseUrl)` from the same base, so paths stay exact (`${baseUrl}/v1/me`).
+  `createHandlers(baseUrl)` from the same base, so paths stay exact (`${baseUrl}/v1/me`). In the
+  browser the same `API_BASE_URL` value goes to both `createHttpClient` and
+  `startMockWorker(baseUrl)`, so a non-root base cannot bypass the mock.
 - **Rationale**: Node `fetch` rejects relative URLs. One factory parameter avoids wildcard
   patterns and globals. The factory has exactly two callers (app and test), so it is not a
   speculative abstraction. It also gives each test a fresh client with fresh CSRF/rotate state.
@@ -61,12 +63,16 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
   3. On `419` (once per request): reset CSRF, `ensureCsrf()`, resend.
   4. On `401` from a request whose `auth` flag is `'session'` (once per request):
      `await rotateOnce()`, then resend. `rotateOnce()` shares the closure-held `rotatePromise`,
-     which is cleared in `finally`.
+     which is cleared in `finally`. A request that was sent before the latest rotate settled
+     (a `settledRotations` counter read before each send) reuses its outcome: retried after a
+     success, rejected after a failure, never rotating again.
   5. The rotate call itself is sent with `auth: 'none'`, so its own failure can never start a
-     rotate. If rotate fails, `rotateOnce()` calls `onSessionExpired()` once in its
-     own `catch` (so N concurrent waiters produce one call), and every waiter throws
-     `ApiError{ type: 'AuthenticationException' }`. If the retried request returns `401` after a
-     successful rotate, the client calls `onSessionExpired()` and throws the same error.
+     rotate. If the server rejects rotate (4xx), every waiter throws
+     `ApiError{ type: 'AuthenticationException' }`; a transient failure (`NetworkError`, 5xx) is
+     rethrown as is and does not end the session. If the retried request returns `401` after a
+     successful rotate, it throws the same error. `onSessionExpired()` fires at most once per
+     settled rotate, however many requests are rejected by it.
+     Before a retry the unread response body is cancelled to free the connection.
   6. The response body is parsed with the endpoint's zod schema. A mismatch throws
      `ApiError{ type: 'SchemaMismatch' }` and logs `console.error` in dev.
 - **Rationale**: this satisfies FR-006…FR-013 and Principle III with no middleware chain. The

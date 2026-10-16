@@ -7,7 +7,6 @@ import {
   Loader2Icon,
 } from 'lucide-react';
 
-// Light theme only (no next-themes); toast colours come from the theme tokens.
 const toastVars: Record<`--${string}`, string> = {
   '--normal-bg': 'var(--popover)',
   '--normal-text': 'var(--popover-foreground)',

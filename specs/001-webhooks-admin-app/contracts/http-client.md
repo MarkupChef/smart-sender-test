@@ -7,8 +7,8 @@ TanStack Query imports (Principle III).
 
 ```ts
 createHttpClient(options: {
-  baseUrl: string;                 // window.location.origin | 'http://localhost' in tests
-  onSessionExpired: () => void;    // called once per failed rotate (inside rotateOnce) or per repeated 401; the app handler must be idempotent
+  baseUrl: string;                 // API_BASE_URL (also passed to startMockWorker) | 'http://localhost' in tests
+  onSessionExpired: () => void;    // called at most once per settled rotate (failed rotate or repeated 401s after it); the app handler should still be idempotent
 }): HttpClient
 
 type RequestOptions = {
@@ -31,6 +31,10 @@ The client state lives inside the `createHttpClient` closure and is unique per c
 
 - `csrfPromise: Promise<string> | undefined` — shared CSRF fetch (single-flight)
 - `rotatePromise: Promise<void> | undefined` — shared rotate (single-flight), cleared in `finally`
+- `settledRotations: number` + `lastRotateFailed: boolean` — rotates with a server verdict; a `401`
+  for a request sent before the latest rotate settled reuses its outcome (late 401s cannot cause a
+  second rotate or a second `onSessionExpired`)
+- `notifiedRotation: number` — the settled rotate `onSessionExpired` was last called for (dedup)
 
 ## Guarantees (each is covered by a test or the README checklist)
 
@@ -40,9 +44,10 @@ The client state lives inside the `createHttpClient` closure and is unique per c
 | G2 | `GET /csrf` runs before the first other request, at most once concurrently | optional |
 | G3 | POST/PUT carry `X-CSRF-TOKEN` | mock rejects otherwise |
 | G4 | N concurrent `401` → exactly one rotate → each request retried once | **required** |
-| G5 | Rotate never triggers rotate | **required** (T051) |
-| G6 | Rotate failure or repeated `401` → `onSessionExpired()` + `ApiError(AuthenticationException)` | **required** (T051); concurrent variant optional |
-| G7 | `419` → one CSRF re-fetch → one retry | optional |
+| G5 | Rotate never triggers rotate (it is sent with `auth: 'none'`) | **required** (T051) |
+| G6 | Rotate rejected (4xx) or repeated `401` → `onSessionExpired()` once per settled rotate + `ApiError(AuthenticationException)` | **required** (T051), incl. concurrent and late-401 variants |
+| G6a | Rotate `NetworkError`/5xx → rethrown as is, session not ended | test |
+| G7 | `419` → one CSRF re-fetch (shared by concurrent 419s) → one retry | test |
 | G8 | Response not matching schema → `ApiError(SchemaMismatch)` | — |
 
 ## Endpoint functions (`src/api/endpoints.ts`)

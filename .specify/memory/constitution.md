@@ -1,6 +1,10 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 1.2.0 (MINOR: added local pre-commit gate)
+- Version change: 1.2.0 → 2.0.0 (MAJOR: comment rule redefined — required → forbidden)
+- Modified principles: I. Simplicity First — no comments in code (was: comments explain *why*,
+  non-obvious guarantees MUST be commented); file size target ceiling ~150 → ~200 lines.
+- Propagated: comments removed from `src/`; plan.md, tasks.md, contracts and issues updated.
+- Earlier, 1.1.0 → 1.2.0 (MINOR: added local pre-commit gate)
 - Development Workflow: added husky + lint-staged pre-commit with full typecheck + test;
   `--no-verify` forbidden; tooling installed in the Setup phase as the first PR.
 - Earlier, 1.0.0 → 1.1.0 (MINOR: materially tightened typing rules)
@@ -38,10 +42,13 @@ This is the meta-principle. When two rules conflict, the one further left in
 - Folder and file names MUST describe their content (`session-refresh.ts`,
   `webhook-edit-form.tsx`). No `utils/`, `helpers/`, `misc/` dumping grounds.
 - Nesting inside `src/` MUST NOT exceed 3 levels. One file = one responsibility;
-  ~150 lines is the target ceiling — exceeding it requires a reason.
+  ~200 lines is the target ceiling — exceeding it requires a reason.
 - Code MUST read top-down: explicit over clever, short functions with meaningful names,
-  early returns. Comments explain *why*, not *what*; non-obvious guarantees (e.g. single-flight
-  rotate) MUST be documented in a short comment.
+  early returns.
+- Code MUST NOT contain comments (including JSDoc). Intent is carried by names, types and tests;
+  non-obvious guarantees (e.g. single-flight rotate) are documented in `specs/` contracts and
+  covered by tests. Only tool directives are allowed (`eslint-disable-next-line` with a reason
+  in the directive itself, `/// <reference>`).
 - Every dependency MUST replace a meaningful amount of own code.
 - File names use `kebab-case`; exported React components use `PascalCase`.
 
@@ -212,4 +219,4 @@ src/
   clarifications.
 - Every PR self-review verifies compliance with these principles.
 
-**Version**: 1.2.0 | **Ratified**: 2026-10-16 | **Last Amended**: 2026-10-16
+**Version**: 2.0.0 | **Ratified**: 2026-10-16 | **Last Amended**: 2026-10-16
