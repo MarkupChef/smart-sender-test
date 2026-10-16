@@ -55,10 +55,14 @@ function applyServerError(error: unknown, setError: UseFormSetError<LoginInput>)
 }
 
 function toSafeRedirect(redirect: string | undefined): string | undefined {
-  if (redirect === undefined || !URL.canParse(redirect, window.location.origin)) return undefined;
-  const target = new URL(redirect, window.location.origin);
-  if (target.origin !== window.location.origin) return undefined;
-  return target.pathname + target.search;
+  if (redirect === undefined) return undefined;
+  try {
+    const target = new URL(redirect, window.location.origin);
+    if (target.origin !== window.location.origin) return undefined;
+    return target.pathname + target.search + target.hash;
+  } catch {
+    return undefined;
+  }
 }
 
 export function LoginPage() {

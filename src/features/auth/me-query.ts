@@ -8,5 +8,6 @@ export function meQueryOptions(api: Api) {
     queryKey: meQueryKey,
     queryFn: () => api.getMe(),
     staleTime: Infinity,
+    gcTime: Infinity,
   });
 }

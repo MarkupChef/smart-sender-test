@@ -8,10 +8,21 @@ import '@/shared/theme.css';
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element #root is missing in index.html');
 
-await startMockWorker(API_BASE_URL);
+const root = createRoot(rootElement);
 
-createRoot(rootElement).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+try {
+  await startMockWorker(API_BASE_URL);
+  root.render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+} catch (error) {
+  console.error(error);
+  root.render(
+    <p role="alert">
+      Не вдалося запустити застосунок: mock API недоступний у цьому браузері. Спробуйте інший
+      браузер або звичайне (не приватне) вікно.
+    </p>,
+  );
+}
