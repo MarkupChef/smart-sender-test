@@ -122,8 +122,8 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
 ## R8. URL state for the list
 
 - **Decision**: the route `/webhooks` uses `validateSearch` with a zod schema:
-  `page: z.number().int().min(1).catch(1)` and `search` as string-or-number → `String` →
-  `trim().max(100)`, `.catch('')` (the router's default JSON parser turns `?search=123` into a number).
+  `page: z.number().int().min(1).default(1).catch(1)` and `search` as string-or-number → `String` →
+  `trim().max(100)`, `.default('').catch('')`; `.default()` keeps both keys optional for navigation (the router's default JSON parser turns `?search=123` into a number).
   Defaults are removed from the URL with the router's `stripSearchParams` middleware. Pagination
   uses `navigate({ search })` (push). Search uses `navigate({ search: { search, page: 1 }, replace: true })`
   after a 300 ms debounce. The query key is `['webhooks', 'list', { page, search }]` with

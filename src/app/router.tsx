@@ -5,12 +5,15 @@ import {
   createRouter,
   Outlet,
   redirect,
+  stripSearchParams,
 } from '@tanstack/react-router';
 import { z } from 'zod';
 import { createEndpoints, type Api } from '@/api/endpoints';
 import { createHttpClient } from '@/api/http-client';
 import { LoginPage } from '@/features/auth/login-page';
 import { meQueryKey } from '@/features/auth/me-query';
+import { listSearchDefaults, listSearchSchema } from '@/features/webhooks/list-search';
+import { WebhooksPage } from '@/features/webhooks/webhooks-page';
 import type { User } from '@/api/schemas';
 import { API_BASE_URL } from './http';
 import { ProtectedLayout } from './protected-layout';
@@ -69,7 +72,9 @@ const protectedRoute = createRoute({
 const webhooksRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: '/webhooks',
-  component: () => <p className="text-muted-foreground">The webhook list will appear here.</p>,
+  validateSearch: listSearchSchema,
+  search: { middlewares: [stripSearchParams(listSearchDefaults)] },
+  component: WebhooksPage,
 });
 
 const routeTree = rootRoute.addChildren([
