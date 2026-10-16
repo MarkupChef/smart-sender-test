@@ -4,13 +4,19 @@ import {
   createRoute,
   createRouter,
   Outlet,
+  parseSearchWith,
   redirect,
+  stringifySearchWith,
+  stripSearchParams,
 } from '@tanstack/react-router';
 import { z } from 'zod';
 import { createEndpoints, type Api } from '@/api/endpoints';
 import { createHttpClient } from '@/api/http-client';
 import { LoginPage } from '@/features/auth/login-page';
 import { meQueryKey } from '@/features/auth/me-query';
+import { logoutMutationKey } from '@/features/auth/use-logout';
+import { listSearchDefaults, listSearchSchema } from '@/features/webhooks/list-search';
+import { WebhooksPage } from '@/features/webhooks/webhooks-page';
 import type { User } from '@/api/schemas';
 import { API_BASE_URL } from './http';
 import { ProtectedLayout } from './protected-layout';
@@ -69,7 +75,9 @@ const protectedRoute = createRoute({
 const webhooksRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: '/webhooks',
-  component: () => <p className="text-muted-foreground">The webhook list will appear here.</p>,
+  validateSearch: listSearchSchema,
+  search: { middlewares: [stripSearchParams(listSearchDefaults)] },
+  component: WebhooksPage,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -90,7 +98,8 @@ const api = createEndpoints(
 let sessionEnding: Promise<void> | undefined;
 
 function endSession(reason: SessionEndReason): Promise<void> {
-  sessionEnding ??= tearDownSession(reason).finally(() => {
+  const signingOut = queryClient.isMutating({ mutationKey: logoutMutationKey }) > 0;
+  sessionEnding ??= tearDownSession(signingOut ? 'signed-out' : reason).finally(() => {
     sessionEnding = undefined;
   });
   return sessionEnding;
@@ -119,6 +128,8 @@ async function tearDownSession(reason: SessionEndReason): Promise<void> {
 export const router = createRouter({
   routeTree,
   context: { queryClient, api, endSession },
+  parseSearch: parseSearchWith((value) => value),
+  stringifySearch: stringifySearchWith(JSON.stringify),
 });
 
 declare module '@tanstack/react-router' {
