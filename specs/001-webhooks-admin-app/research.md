@@ -100,7 +100,7 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
   { reason: 'expired', redirect } })` → `queryClient.clear()`. It is idempotent: a call is ignored while a
   module flag `expiryInProgress` is set or when `me` is not cached (already signed out); the flag
   is set at the start and reset in `finally`, so the handler needs no link to the login feature
-  and the next expiry after a new login is handled again. The login screen shows "Сесія завершилась" when
+  and the next expiry after a new login is handled again. The login screen shows "Session expired" when
   `reason === 'expired'`. Logout calls `revoke`, ignores its error, then runs the same sequence
   without `reason` and with `replace: true`. The protected layout reads `me` from the route context
   returned by the guard's `beforeLoad`, not from `useQuery`.
@@ -108,7 +108,7 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
   Logout must leave the user signed out even when `revoke` fails (spec edge case). Removing only
   `me` first lets the `/login` guard pass (it redirects away while `me` is cached); clearing the
   rest only after navigation means no still-mounted query can refetch, hit `401 → rotate 400` and
-  show a false "Сесія завершилась" after a voluntary logout.
+  show a false "Session expired" after a voluntary logout.
 - **Open-redirect guard**: `redirect` is accepted only if `new URL(redirect, location.origin)` has
   the app's own origin; the app then navigates to that URL's `pathname + search`. A prefix check
   (`/` but not `//`) is not enough: browsers read `/\evil.com` as `//evil.com`.
@@ -139,7 +139,7 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
   search schema, so links from the list carry `page`/`search` along. "Back to list" and
   post-save navigation go to `/webhooks` with those params. After saving, the detail cache is set
   from the `PUT` response, `['webhooks','list']` is invalidated, and a sonner toast
-  "Збережено" is shown.
+  "Saved" is shown.
 - **Rationale**: this matches spec US4-6, survives reload, and needs no history tricks.
 - **Alternatives**: a modal (no URL, no natural 404 state, rejected in spec Assumptions);
   `history.back()` (breaks when the edit page was opened directly).
@@ -156,7 +156,7 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
 ## R11. TanStack Query defaults
 
 - **Decision**: `retry: false` and `refetchOnWindowFocus: false` globally. Every error state has a
-  "Повторити" button that calls `refetch()`.
+  "Retry" button that calls `refetch()`.
 - **Rationale**: the transport already owns 401/419. Silent retries of 400/404/422 are wrong, and
   network retry would be speculative polish. A visible retry button is enough at this scale.
 - **Alternatives**: a `retry` predicate allowing network-error retries (deferred, noted in README).

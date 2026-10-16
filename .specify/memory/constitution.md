@@ -1,6 +1,10 @@
 <!--
 Sync Impact Report
-- Version change: 1.2.0 → 2.0.0 (MAJOR: comment rule redefined — required → forbidden)
+- Version change: 2.0.0 → 2.1.0 (MINOR: UI language Ukrainian → English)
+- Modified: Tech & UI constraints — UI language is English to match server error messages.
+- Propagated: UI strings in `src/`, `index.html` (`lang="en"`), spec.md, plan.md, tasks.md,
+  research.md, data-model.md, quickstart.md, contracts/ui-routes.md.
+- Earlier, 1.2.0 → 2.0.0 (MAJOR: comment rule redefined — required → forbidden)
 - Modified principles: I. Simplicity First — no comments in code (was: comments explain *why*,
   non-obvious guarantees MUST be commented); file size target ceiling ~150 → ~200 lines.
 - Propagated: comments removed from `src/`; plan.md, tasks.md, contracts and issues updated.
@@ -155,11 +159,11 @@ src/
 
 | Error | Owner | User sees |
 | --- | --- | --- |
-| 401 | transport: rotate → retry; else `onSessionExpired` | nothing, or login with "Сесія завершилась" |
+| 401 | transport: rotate → retry; else `onSessionExpired` | nothing, or login with "Session expired" |
 | 419 | transport: re-fetch CSRF → one retry | nothing, or a regular error |
 | 422 | form: `payload` → `setError` per field; unknown fields/`message` → `root` | error next to field |
-| 404 | screen: "Вебхук не знайдено" + link to list | dedicated state |
-| 400 / network / unknown | screen: error state with "Повторити" | dedicated state |
+| 404 | screen: "Webhook not found" + link to list | dedicated state |
+| 400 / network / unknown | screen: error state with "Retry" | dedicated state |
 | zod mismatch on response | transport: `ApiError` `SchemaMismatch` (+ `console.error` in dev) | as unknown error |
 
 - No global error toasts; a toast is allowed only for successful save.
@@ -178,7 +182,7 @@ src/
   `placeholderData: keepPreviousData`.
 - **UI**: thin components that render and delegate. Every async screen handles loading, empty,
   error (with retry) and success. Semantic markup (`<table>`, `<label for>`, `aria-invalid` +
-  `aria-describedby` for field errors). UI language is Ukrainian, plain strings, no i18n library.
+  `aria-describedby` for field errors). UI language is English (matches server messages), plain strings, no i18n library.
 - **Brand (smartsender.com)**: expressed only through theme tokens in one `theme.css` mapped to
   shadcn CSS variables — primary `#1380F6` (hover `#2276D2`), text `#232323`, muted `#595959`,
   surfaces `#FFFFFF`/`#FAFAFA`/`#F6F7F9`, borders `#E9ECEF`, success `#40C057`,
@@ -219,4 +223,4 @@ src/
   clarifications.
 - Every PR self-review verifies compliance with these principles.
 
-**Version**: 2.0.0 | **Ratified**: 2026-10-16 | **Last Amended**: 2026-10-16
+**Version**: 2.1.0 | **Ratified**: 2026-10-16 | **Last Amended**: 2026-10-16

@@ -10,7 +10,7 @@ import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { useLogin } from './use-login';
 
-const GENERIC_ERROR = 'Не вдалося увійти. Спробуйте ще раз.';
+const GENERIC_ERROR = 'Sign-in failed. Please try again.';
 
 function isLoginField(field: string): field is keyof LoginInput {
   return field === 'email' || field === 'password';
@@ -105,7 +105,7 @@ export function LoginPage() {
           <form className="grid gap-4" noValidate onSubmit={(event) => void onSubmit(event)}>
             {search.reason === 'expired' && (
               <Alert>
-                <AlertDescription>Сесія завершилась. Увійдіть знову.</AlertDescription>
+                <AlertDescription>Your session has expired. Please sign in again.</AlertDescription>
               </Alert>
             )}
             {rootError !== undefined && (
@@ -130,7 +130,7 @@ export function LoginPage() {
               )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Пароль</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -146,7 +146,7 @@ export function LoginPage() {
               )}
             </div>
             <Button type="submit" disabled={login.isPending}>
-              Увійти
+              Sign in
             </Button>
           </form>
         </CardContent>

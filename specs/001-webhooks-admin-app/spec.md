@@ -6,7 +6,7 @@
 
 **Status**: Ready
 
-**Input**: User description: "файл ./docs/smart-sender-senior-frontend-test.md" — a small application with sign-in, a webhook list and webhook editing, running against a simulated API that follows the contract defined in that document.
+**Input**: User description: "file ./docs/smart-sender-senior-frontend-test.md" — a small application with sign-in, a webhook list and webhook editing, running against a simulated API that follows the contract defined in that document.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -93,7 +93,7 @@ press back → previous page/search restored; search for a nonsense string → e
    values fall back to defaults (page 1, no search) instead of producing an error.
 5. **Given** a search with no matches, **When** results arrive, **Then** an empty-state message is shown.
 6. **Given** a loading or failing request, **When** it is in progress or fails, **Then** a loading
-   indicator or an error state with a "Повторити" (retry) action is shown; while switching pages the
+   indicator or an error state with a "Retry" (retry) action is shown; while switching pages the
    previous data stays visible until new data arrives.
 
 ---
@@ -119,8 +119,8 @@ values → server error shown under URL; enter valid values and save → success
    shown next to its field; errors not tied to a known field are shown at the form level.
 4. **Given** a save in progress, **When** the user tries to submit again, **Then** submission is
    blocked until the current save finishes.
-5. **Given** a webhook address that does not exist, **When** it is opened, **Then** a "Вебхук не
-   знайдено" state with a link back to the list is shown.
+5. **Given** a webhook address that does not exist, **When** it is opened, **Then** a "Webhook not
+   found" state with a link back to the list is shown.
 6. **Given** the user returns from the edit screen to the list, **When** the list opens, **Then** the
    previously active page and search are preserved.
 
@@ -229,7 +229,7 @@ token = `device_session_token`; device identifier = `fingerprint`; unauthenticat
 - Only name and URL are editable; active status, creation and deletion of webhooks are out of scope (not in the contract).
 - Session does not survive a page reload; re-signing in after reload is acceptable per the mock rules, and list parameters in the address are still applied.
 - The captcha header is sent with a fixed non-empty placeholder value; no captcha widget is shown.
-- UI language is Ukrainian; a single light theme with Smart Sender brand colors and fonts; no company logo/assets are copied.
+- UI language is English (matches server messages); a single light theme with Smart Sender brand colors and fonts; no company logo/assets are copied.
 - Visual design is not evaluated; standard web desktop browsers are targeted, mobile polish is out of scope.
 - Only the one mandatory automated test is required; extra session/CSRF scenarios are added if time allows; UI is verified manually via a README checklist.
 - Stack and engineering rules are fixed by the project constitution (`.specify/memory/constitution.md`) and are applied at planning, not in this spec.

@@ -60,7 +60,7 @@ const protectedRoute = createRoute({
 const webhooksRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: '/webhooks',
-  component: () => <p className="text-muted-foreground">Список вебхуків з'явиться тут.</p>,
+  component: () => <p className="text-muted-foreground">The webhook list will appear here.</p>,
 });
 
 const routeTree = rootRoute.addChildren([

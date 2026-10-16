@@ -46,16 +46,16 @@ The guarantees are listed in [contracts/http-client.md](./contracts/http-client.
    rotate.
 4. **Expiry (US2-3)**: in the console, run `__mock.endSession()`. This is a dev-only helper
    exposed by `src/mocks/browser.ts`; it clears the server session, so rotate returns `400`. The
-   next request redirects to `/login` with "Сесія завершилась".
-5. **Logout (US2-5)**: "Вийти" opens `/login`. Back navigation does not show cached data.
+   next request redirects to `/login` with "Session expired".
+5. **Logout (US2-5)**: "Sign out" opens `/login`. Back navigation does not show cached data.
 6. **URL state (US3, SC-004)**: search `hook`, go to page 2, and reload. The view is the same.
    Back/forward walk through pages. Changing the search resets to page 1. `?page=abc` opens page 1.
 7. **States (US3-5/6)**: searching `zzzz` shows the empty state. Turning on DevTools → Network →
-   "Offline" and changing the page shows the error state. "Повторити" recovers once the network is
+   "Offline" and changing the page shows the error state. "Retry" recovers once the network is
    back on.
 8. **Edit (US4)**: clearing the name or entering `ftp://x` shows a field error. A valid save shows
-   the "Збережено" toast and returns to the same list page with the updated row. `/webhooks/9999`
-   shows "Вебхук не знайдено". Client rules mirror the server, so to see a server `422` on the edit
+   the "Saved" toast and returns to the same list page with the updated row. `/webhooks/9999`
+   shows "Webhook not found". Client rules mirror the server, so to see a server `422` on the edit
    form run `__mock.failNextUpdate()` in the console and save valid values: the server message
    appears under the URL field (SC-005).
 9. **Reload on a protected page**: re-sign-in is requested, and the list params from the URL are
