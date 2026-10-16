@@ -2,5 +2,8 @@
   "singleQuote": true,
   "semi": true,
   "printWidth": 100,
-  "trailingComma": "all"
+  "trailingComma": "all",
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "tailwindStylesheet": "./src/shared/theme.css",
+  "tailwindFunctions": ["cn", "cva"]
 }
