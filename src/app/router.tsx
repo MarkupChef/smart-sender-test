@@ -11,7 +11,7 @@ import type { Api } from '@/api/endpoints';
 import { LoginPage } from '@/features/auth/login-page';
 import { meQueryKey } from '@/features/auth/me-query';
 import type { User } from '@/api/schemas';
-import { api } from './http';
+import { api, setSessionExpiredHandler } from './http';
 import { ProtectedLayout } from './protected-layout';
 import { queryClient } from './query-client';
 
@@ -72,6 +72,28 @@ const routeTree = rootRoute.addChildren([
 export const router = createRouter({
   routeTree,
   context: { queryClient, api },
+});
+
+let expiryInProgress = false;
+
+async function handleSessionExpired(): Promise<void> {
+  if (expiryInProgress || queryClient.getQueryData(meQueryKey) === undefined) {
+    return;
+  }
+  expiryInProgress = true;
+  try {
+    const redirectTo = router.state.location.href;
+    await queryClient.cancelQueries();
+    queryClient.removeQueries({ queryKey: meQueryKey });
+    await router.navigate({ to: '/login', search: { reason: 'expired', redirect: redirectTo } });
+    queryClient.clear();
+  } finally {
+    expiryInProgress = false;
+  }
+}
+
+setSessionExpiredHandler(() => {
+  void handleSessionExpired();
 });
 
 declare module '@tanstack/react-router' {
