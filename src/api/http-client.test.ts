@@ -136,6 +136,24 @@ describe('http client session handling', () => {
     expect(errorType(error)).toBe('NetworkError');
     expect(onSessionExpired).not.toHaveBeenCalled();
   });
+
+  it('a request aborted before its 401 is handled neither rotates nor ends the session', async () => {
+    const { api, onSessionExpired } = await signIn();
+    const controller = new AbortController();
+    server.use(
+      http.get(`${TEST_BASE_URL}/v1/me`, () => {
+        controller.abort();
+        return unauthenticated();
+      }),
+    );
+
+    const error = await api.getMe(controller.signal).catch((caught: unknown) => caught);
+
+    expect(controller.signal.aborted).toBe(true);
+    expect(isApiError(error)).toBe(false);
+    expect(rotateCalls).toBe(0);
+    expect(onSessionExpired).not.toHaveBeenCalled();
+  });
 });
 
 describe('http client CSRF handling', () => {

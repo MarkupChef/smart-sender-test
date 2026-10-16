@@ -22,5 +22,5 @@
 | Open webhook | `<Link to="/webhooks/$webhookId" params search={{ page, search }}>` |
 | Back / after save | `navigate({ to: '/webhooks', search: { page, search } })` |
 | Sign-in success | `navigate({ href: target.pathname + target.search, replace: true })` (`target = new URL(redirect, origin)`, same origin only) or `navigate({ to: '/webhooks', replace: true })` |
-| Session expired | remove `me` → `navigate({ to: '/login', search: { reason: 'expired', redirect } })` → cache cleared (idempotent) |
-| Logout | revoke (errors ignored) → remove `me` → `navigate({ to: '/login', replace: true })` → cache cleared |
+| Session expired | `endSession('expired')`: cancel (abort) queries → remove `me` → `navigate({ to: '/login', search: { reason: 'expired', redirect }, replace: true })` → cache cleared in `finally` |
+| Logout | cancel (abort) queries → revoke (errors ignored) → `endSession('signed-out')`: remove `me` → `navigate({ to: '/login', replace: true })` → cache cleared in `finally` |

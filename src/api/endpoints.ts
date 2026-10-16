@@ -40,10 +40,16 @@ export function createEndpoints(client: HttpClient) {
         auth: 'none',
       }),
 
-    getMe: () =>
-      client.request({ method: 'GET', path: '/v1/me', auth: 'session', schema: userSchema }),
+    getMe: (signal?: AbortSignal) =>
+      client.request({
+        method: 'GET',
+        path: '/v1/me',
+        auth: 'session',
+        schema: userSchema,
+        signal,
+      }),
 
-    listWebhooks: ({ page, search }: { page: number; search: string }) => {
+    listWebhooks: ({ page, search }: { page: number; search: string }, signal?: AbortSignal) => {
       const query = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
       if (search !== '') query.set('search', search);
       return client.request({
@@ -51,15 +57,17 @@ export function createEndpoints(client: HttpClient) {
         path: `/v1/webhooks?${query.toString()}`,
         auth: 'session',
         schema: webhookListSchema,
+        signal,
       });
     },
 
-    getWebhook: (id: number) =>
+    getWebhook: (id: number, signal?: AbortSignal) =>
       client.request({
         method: 'GET',
         path: `/v1/webhooks/${String(id)}`,
         auth: 'session',
         schema: webhookSchema,
+        signal,
       }),
 
     updateWebhook: (id: number, input: WebhookInput) =>

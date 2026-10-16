@@ -95,14 +95,17 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
 
 ## R7. Session-expired and logout flow
 
-- **Decision**: `onSessionExpired` (wired in `src/app`) runs, in order: `cancelQueries()` →
-  `removeQueries({ queryKey: meQueryKey })` → `await router.navigate({ to: '/login', search:
-  { reason: 'expired', redirect } })` → `queryClient.clear()`. It is idempotent: a call is ignored while a
-  module flag `expiryInProgress` is set or when `me` is not cached (already signed out); the flag
-  is set at the start and reset in `finally`, so the handler needs no link to the login feature
-  and the next expiry after a new login is handled again. The login screen shows "Session expired" when
-  `reason === 'expired'`. Logout calls `revoke`, ignores its error, then runs the same sequence
-  without `reason` and with `replace: true`. The protected layout reads `me` from the route context
+- **Decision**: one teardown `endSession(reason: 'expired' | 'signed-out')` in `src/app/router.tsx`,
+  passed to features through the router context, runs in order: `cancelQueries()` (aborts requests
+  in flight, `queryFn` forwards its `signal`) → `removeQueries({ queryKey: meQueryKey })` →
+  `await router.navigate({ to: '/login', replace: true })` (with `search: { reason: 'expired',
+  redirect }` for expiry) → `queryClient.clear()` in `finally`; if navigation throws, the error is
+  logged and `window.location.replace('/login')` is the fallback. A module-level `sessionEnding`
+  promise makes it single-flight: concurrent expiry and logout share the first teardown, and it is
+  reset when settled, so the next expiry after a new login is handled again. `onSessionExpired`
+  (passed to `createHttpClient` at creation) ignores the call when `me` is not cached. The login
+  screen shows "Session expired" when `reason === 'expired'`. Logout aborts queries, calls
+  `revoke`, ignores its error, then runs `endSession('signed-out')`. The protected layout reads `me` from the route context
   returned by the guard's `beforeLoad`, not from `useQuery`.
 - **Rationale**: the URL is the single place for navigation state. `reason` is not a secret.
   Logout must leave the user signed out even when `revoke` fails (spec edge case). Removing only
