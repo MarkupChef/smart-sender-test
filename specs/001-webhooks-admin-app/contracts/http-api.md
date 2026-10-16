@@ -18,7 +18,7 @@ pins down the behaviour the brief leaves implicit. Schemas: [data-model.md](../d
 | Method & path | Request | Success | Errors | Auth |
 | --- | --- | --- | --- | --- |
 | `GET /csrf` | — | `204`, header `X-CSRF-TOKEN` | — | none |
-| `POST /auth/login` | header `X-Captcha-Token` (non-empty); `{ email, password, fingerprint }` | `200 { device_session_token }` | `422` (`payload.password` on wrong credentials; `payload.<field>` on missing fields; `payload.captcha` when the header is missing), `419` | none |
+| `POST /auth/login` | header `X-Captcha-Token` (non-empty); `{ email, password, fingerprint }` | `200 { device_session_token }` | `422` (`payload.password` on wrong credentials; `payload.<field>` on missing fields, incl. `fingerprint`; `payload.captcha` when the header is missing), `419` | none |
 | `POST /auth/token/issue` | `{ device_session_token, fingerprint }` | `200`, starts session (TTL 30 s) | `422` (unknown/used token or fingerprint mismatch), `419` | none |
 | `POST /auth/token/rotate` | `{ fingerprint }` | `200`, `expiresAt = now + 30 s` | `400` (no session, or fingerprint mismatch), `419` | none (never retried by rotate) |
 | `POST /auth/token/revoke` | `{ fingerprint }` | `204`, session cleared (idempotent) | `419` | none |
@@ -53,7 +53,8 @@ login screen submit
 any protected call ─► 401 ─► POST /auth/token/rotate (shared by all concurrent 401s)
                                ├─ 200 ─► retry original once ─┬─ 2xx ─► result
                                │                              └─ 401 ─► onSessionExpired
-                               └─ 400 ─► onSessionExpired
+                               ├─ 400 ─► onSessionExpired
+                               └─ network / 5xx ─► error rethrown, session kept
 
 any POST/PUT ─► 419 ─► GET /csrf (shared) ─► retry once ─► result or ApiError(TokenMismatchException)
 ```
