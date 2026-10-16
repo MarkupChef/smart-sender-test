@@ -36,7 +36,7 @@ export function WebhooksPage() {
         <Alert variant="destructive">
           <AlertTitle>Could not load webhooks</AlertTitle>
           <AlertDescription>
-            <p>{list.error.message}</p>
+            <p>Something went wrong. Please try again.</p>
             <Button
               variant="outline"
               size="sm"

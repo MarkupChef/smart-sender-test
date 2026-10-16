@@ -11,9 +11,18 @@ import { webhookDetailQueryOptions } from './webhook-queries';
 
 const LINK_CLASS = 'text-sm text-primary underline-offset-4 hover:underline';
 
+const webhookIdPattern = /^[1-9]\d*$/;
+
+function parseWebhookId(raw: string): number | undefined {
+  if (!webhookIdPattern.test(raw)) return undefined;
+  const id = Number(raw);
+  return Number.isSafeInteger(id) ? id : undefined;
+}
+
 export function WebhookEditPage() {
-  const { webhookId } = useParams({ from: '/_protected/webhooks/$webhookId' });
+  const params = useParams({ from: '/_protected/webhooks/$webhookId' });
   const { page, search } = useSearch({ from: '/_protected/webhooks/$webhookId' });
+  const webhookId = parseWebhookId(params.webhookId);
   const listSearch = { page, search };
 
   return (
@@ -49,7 +58,7 @@ function WebhookEditContent({ id, listSearch }: WebhookEditContentProps) {
     );
   }
 
-  if (detail.isError) {
+  if (detail.isError && detail.data === undefined) {
     if (isApiError(detail.error) && detail.error.info.type === 'NotFoundException') {
       return <WebhookNotFound listSearch={listSearch} />;
     }
@@ -57,7 +66,7 @@ function WebhookEditContent({ id, listSearch }: WebhookEditContentProps) {
       <Alert variant="destructive">
         <AlertTitle>Could not load the webhook</AlertTitle>
         <AlertDescription>
-          <p>{detail.error.message}</p>
+          <p>Something went wrong. Please try again.</p>
           <Button
             variant="outline"
             size="sm"

@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useForm, type UseFormSetError } from 'react-hook-form';
-import { toast } from 'sonner';
 import { isApiError } from '@/api/api-error';
 import { webhookInputSchema, type Webhook, type WebhookInput } from '@/api/schemas';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
@@ -71,14 +70,13 @@ export function WebhookEditForm({ webhook, listSearch }: WebhookEditFormProps) {
     formState: { errors },
   } = useForm<WebhookInput>({
     resolver: zodResolver(webhookInputSchema),
-    defaultValues: { name: webhook.name, url: webhook.url },
+    values: { name: webhook.name, url: webhook.url },
+    resetOptions: { keepDirtyValues: true },
   });
 
   const onSubmit = handleSubmit((input) => {
-    if (update.isPending) return;
     update.mutate(input, {
       onSuccess: () => {
-        toast.success('Saved');
         void navigate({ to: '/webhooks', search: listSearch });
       },
       onError: (error) => {

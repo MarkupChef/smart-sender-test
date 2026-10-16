@@ -81,21 +81,9 @@ const webhooksRoute = createRoute({
   component: WebhooksPage,
 });
 
-const webhookIdPattern = /^[1-9]\d*$/;
-
-function parseWebhookId(raw: string): number | undefined {
-  if (!webhookIdPattern.test(raw)) return undefined;
-  const id = Number(raw);
-  return Number.isSafeInteger(id) ? id : undefined;
-}
-
 const webhookEditRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: '/webhooks/$webhookId',
-  params: {
-    parse: ({ webhookId }) => ({ webhookId: parseWebhookId(webhookId) }),
-    stringify: ({ webhookId }) => ({ webhookId: webhookId === undefined ? '' : String(webhookId) }),
-  },
   validateSearch: listSearchSchema,
   search: { middlewares: [stripSearchParams(listSearchDefaults)] },
   component: WebhookEditPage,

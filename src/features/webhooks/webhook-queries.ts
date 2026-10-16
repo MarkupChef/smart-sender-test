@@ -1,7 +1,8 @@
 import { keepPreviousData, queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouteContext } from '@tanstack/react-router';
 import type { Api } from '@/api/endpoints';
-import type { WebhookInput } from '@/api/schemas';
+import { toast } from 'sonner';
+import type { WebhookInput, WebhookList } from '@/api/schemas';
 import type { ListSearch } from './list-search';
 
 export function webhookListQueryOptions(api: Api, { page, search }: ListSearch) {
@@ -26,7 +27,16 @@ export function useUpdateWebhook(id: number) {
   return useMutation({
     mutationFn: (input: WebhookInput) => api.updateWebhook(id, input),
     onSuccess: async (updated) => {
+      toast.success('Saved');
       queryClient.setQueryData(webhookDetailQueryOptions(api, id).queryKey, updated);
+      queryClient.setQueriesData<WebhookList>({ queryKey: ['webhooks', 'list'] }, (list) =>
+        list === undefined
+          ? undefined
+          : {
+              ...list,
+              data: list.data.map((webhook) => (webhook.id === updated.id ? updated : webhook)),
+            },
+      );
       await queryClient.invalidateQueries({ queryKey: ['webhooks', 'list'] });
     },
   });

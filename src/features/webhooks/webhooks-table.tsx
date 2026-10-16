@@ -25,7 +25,7 @@ export function WebhooksTable({ webhooks, isUpdating }: WebhooksTableProps) {
               <Link
                 from="/webhooks"
                 to="/webhooks/$webhookId"
-                params={{ webhookId: webhook.id }}
+                params={{ webhookId: String(webhook.id) }}
                 search={true}
                 className="text-primary underline-offset-4 hover:underline"
               >
