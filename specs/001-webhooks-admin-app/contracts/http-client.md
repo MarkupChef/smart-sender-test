@@ -8,11 +8,26 @@ TanStack Query imports (Principle III).
 ```ts
 createHttpClient(options: {
   baseUrl: string;                 // window.location.origin | 'http://localhost' in tests
-  onSessionExpired: () => void;    // called at most once per failed rotate/repeated-401 chain
+  onSessionExpired: () => void;    // called once per failed rotate (inside rotateOnce) or per repeated 401; the app handler must be idempotent
 }): HttpClient
+
+type RequestOptions = {
+  method: 'GET' | 'POST' | 'PUT';
+  path: string;
+  body?: unknown;
+  auth: 'session' | 'none';
+  captcha?: boolean;
+};
+
+interface HttpClient {
+  request<T>(opts: RequestOptions & { schema: ZodType<T> }): Promise<T>; // body validated
+  request(opts: RequestOptions): Promise<undefined>;                      // body ignored
+}
 ```
 
-The module-scoped state lives inside the closure and is unique per client instance:
+A response body is never returned without a zod schema (FR-024), so no unvalidated `T` exists.
+
+The client state lives inside the `createHttpClient` closure and is unique per client instance:
 
 - `csrfPromise: Promise<string> | undefined` — shared CSRF fetch (single-flight)
 - `rotatePromise: Promise<void> | undefined` — shared rotate (single-flight), cleared in `finally`
@@ -25,21 +40,25 @@ The module-scoped state lives inside the closure and is unique per client instan
 | G2 | `GET /csrf` runs before the first other request, at most once concurrently | optional |
 | G3 | POST/PUT carry `X-CSRF-TOKEN` | mock rejects otherwise |
 | G4 | N concurrent `401` → exactly one rotate → each request retried once | **required** |
-| G5 | Rotate never triggers rotate | optional |
-| G6 | Rotate failure or repeated `401` → `onSessionExpired()` + `ApiError(AuthenticationException)` | optional |
+| G5 | Rotate never triggers rotate | **required** (T051) |
+| G6 | Rotate failure or repeated `401` → `onSessionExpired()` + `ApiError(AuthenticationException)` | **required** (T051); concurrent variant optional |
 | G7 | `419` → one CSRF re-fetch → one retry | optional |
 | G8 | Response not matching schema → `ApiError(SchemaMismatch)` | — |
 
 ## Endpoint functions (`src/api/endpoints.ts`)
 
 These are thin typed wrappers over the client. Each one validates its response with zod.
+Auth endpoints add `fingerprint: getFingerprint()` to the request body themselves; callers never
+pass it (FR-004).
+
+`GET /csrf` and `POST /auth/token/rotate` are not endpoint functions: `http-client.ts` sends them
+itself (`ensureCsrf()`, `rotateOnce()`), so `endpoints.ts` depends on the client and never the
+other way round.
 
 ```ts
-getCsrf()                                     // internal, used by the client
-login(input: { email; password; fingerprint }): Promise<{ device_session_token: string }>
-issueSession(input: { device_session_token; fingerprint }): Promise<void>
-rotateSession(input: { fingerprint }): Promise<void>      // internal, auth: 'none'
-revokeSession(input: { fingerprint }): Promise<void>
+login(input: { email; password }): Promise<{ device_session_token: string }>   // body + fingerprint
+issueSession(input: { device_session_token }): Promise<void>                    // body + fingerprint
+revokeSession(): Promise<void>                // body { fingerprint }
 getMe(): Promise<User>
 listWebhooks(params: { page: number; search: string }): Promise<WebhookList>   // limit fixed to 10
 getWebhook(id: number): Promise<Webhook>

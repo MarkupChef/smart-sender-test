@@ -54,17 +54,19 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
 ## R5. Transport algorithm (single-flight CSRF and rotate, one retry each)
 
 - **Decision**: linear code in `src/api/http-client.ts`:
-  1. `ensureCsrf()`. A module-scoped `csrfPromise` makes concurrent first calls share one
+  1. `ensureCsrf()`. A `csrfPromise` held in the `createHttpClient` closure makes concurrent first calls share one
      `GET /csrf`. The promise is reset on failure and on `419`.
   2. `send()` adds `X-Requested-With`, `Content-Type`, and `X-CSRF-TOKEN` on POST/PUT, plus
      `X-Captcha-Token` when the endpoint asks for it.
   3. On `419` (once per request): reset CSRF, `ensureCsrf()`, resend.
   4. On `401` from a request whose `auth` flag is `'session'` (once per request):
-     `await rotateOnce()`, then resend. `rotateOnce()` shares the module-scoped `rotatePromise`,
+     `await rotateOnce()`, then resend. `rotateOnce()` shares the closure-held `rotatePromise`,
      which is cleared in `finally`.
   5. The rotate call itself is sent with `auth: 'none'`, so its own failure can never start a
-     rotate. If rotate fails, or the retried request returns `401`, the client calls
-     `onSessionExpired()` and throws `ApiError{ type: 'AuthenticationException' }`.
+     rotate. If rotate fails, `rotateOnce()` calls `onSessionExpired()` once in its
+     own `catch` (so N concurrent waiters produce one call), and every waiter throws
+     `ApiError{ type: 'AuthenticationException' }`. If the retried request returns `401` after a
+     successful rotate, the client calls `onSessionExpired()` and throws the same error.
   6. The response body is parsed with the endpoint's zod schema. A mismatch throws
      `ApiError{ type: 'SchemaMismatch' }` and logs `console.error` in dev.
 - **Rationale**: this satisfies FR-006…FR-013 and Principle III with no middleware chain. The
@@ -87,26 +89,39 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
 
 ## R7. Session-expired and logout flow
 
-- **Decision**: `onSessionExpired` (wired in `src/app`) calls `queryClient.clear()` and then
-  `router.navigate({ to: '/login', search: { reason: 'expired', redirect } })`. The login screen
-  shows "Сесія завершилась" when `reason === 'expired'`. Logout calls `revoke`, ignores its error,
-  then clears the cache and navigates the same way without `reason`.
+- **Decision**: `onSessionExpired` (wired in `src/app`) runs, in order: `cancelQueries()` →
+  `removeQueries({ queryKey: meQueryKey })` → `await router.navigate({ to: '/login', search:
+  { reason: 'expired', redirect } })` → `queryClient.clear()`. It is idempotent: a call is ignored while a
+  module flag `expiryInProgress` is set or when `me` is not cached (already signed out); the flag
+  is set at the start and reset in `finally`, so the handler needs no link to the login feature
+  and the next expiry after a new login is handled again. The login screen shows "Сесія завершилась" when
+  `reason === 'expired'`. Logout calls `revoke`, ignores its error, then runs the same sequence
+  without `reason` and with `replace: true`. The protected layout reads `me` from the route context
+  returned by the guard's `beforeLoad`, not from `useQuery`.
 - **Rationale**: the URL is the single place for navigation state. `reason` is not a secret.
-  Logout must leave the user signed out even when `revoke` fails (spec edge case).
-- **Open-redirect guard**: `redirect` is accepted only if it starts with `/` and not with `//`.
-  Otherwise it falls back to `/webhooks`.
+  Logout must leave the user signed out even when `revoke` fails (spec edge case). Removing only
+  `me` first lets the `/login` guard pass (it redirects away while `me` is cached); clearing the
+  rest only after navigation means no still-mounted query can refetch, hit `401 → rotate 400` and
+  show a false "Сесія завершилась" after a voluntary logout.
+- **Open-redirect guard**: `redirect` is accepted only if `new URL(redirect, location.origin)` has
+  the app's own origin; the app then navigates to that URL's `pathname + search`. A prefix check
+  (`/` but not `//`) is not enough: browsers read `/\evil.com` as `//evil.com`.
+  Otherwise it falls back to `/webhooks`. It is applied with
+  `navigate({ href: target.pathname + target.search })`, because `redirect` carries the query
+  string and `to` does not parse one.
 
 ## R8. URL state for the list
 
 - **Decision**: the route `/webhooks` uses `validateSearch` with a zod schema:
-  `page: z.number().int().min(1).catch(1)` and `search: z.string().trim().max(100).catch('')`.
+  `page: z.number().int().min(1).catch(1)` and `search` as string-or-number → `String` →
+  `trim().max(100)`, `.catch('')` (the router's default JSON parser turns `?search=123` into a number).
   Defaults are removed from the URL with the router's `stripSearchParams` middleware. Pagination
   uses `navigate({ search })` (push). Search uses `navigate({ search: { search, page: 1 }, replace: true })`
   after a 300 ms debounce. The query key is `['webhooks', 'list', { page, search }]` with
   `placeholderData: keepPreviousData`.
 - **Search input draft**: the input owns a local `draft` string, which is the text being typed and
-  not navigation state. An own `useDebouncedValue` hook (~10 lines; not worth a dependency) pushes
-  it to the URL. An effect re-syncs `draft` from the URL when the URL value changes externally
+  not navigation state. An inline `useEffect` + `setTimeout(300)` in the search input pushes it to
+  the URL (one usage, so no shared hook per Principle I, and not worth a dependency). An effect re-syncs `draft` from the URL when the URL value changes externally
   (back/forward) and differs from the draft. This keeps the URL as the source of truth without
   remounting the input and losing focus.
 - **Alternatives**: `key={search}` remount (loses focus on every debounced write, rejected);

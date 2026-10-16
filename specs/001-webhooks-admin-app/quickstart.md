@@ -9,7 +9,7 @@
 
 ```bash
 pnpm install
-pnpm dev          # http://localhost:5173, MSW worker starts automatically in dev
+pnpm dev          # http://localhost:5173, MSW worker starts automatically (also in `pnpm preview`)
 ```
 
 Test credentials (single mock user; the final values also go in the README):
@@ -38,8 +38,9 @@ The guarantees are listed in [contracts/http-client.md](./contracts/http-client.
 1. **Sign-in (US1)**: a wrong password shows a message under the password field. Correct
    credentials open `/webhooks` and the header shows the user's name.
 2. **Storage (FR-003/004, SC-006)**: in DevTools → Application, `localStorage` holds only
-   `fingerprint` (32 hex). No token appears in the URL, in storage, or in response bodies after
-   `/auth/login`.
+   `fingerprint` (32 hex). No token appears in the URL or in storage. `device_session_token` is
+   seen only in the `/auth/login` response and the `/auth/token/issue` request; no session token
+   appears in any response.
 3. **Silent rotate (US2, SC-002)**: wait more than 30 s, then change the page. The Network tab
    shows `401 → rotate 200 → retry 200`, and the UI does not change. Two parallel `401`s share one
    rotate.
@@ -54,9 +55,8 @@ The guarantees are listed in [contracts/http-client.md](./contracts/http-client.
    back on.
 8. **Edit (US4)**: clearing the name or entering `ftp://x` shows a field error. A valid save shows
    the "Збережено" toast and returns to the same list page with the updated row. `/webhooks/9999`
-   shows "Вебхук не знайдено". Server-side `422` mapping is visible on the login form (wrong
-   password); for the edit form, the mapping is checked by reading the code. Client rules mirror the
-   server, so the edit form cannot produce a server `422` from the UI. This is a known trade-off and
-   is listed in the README.
+   shows "Вебхук не знайдено". Client rules mirror the server, so to see a server `422` on the edit
+   form run `__mock.failNextUpdate()` in the console and save valid values: the server message
+   appears under the URL field (SC-005).
 9. **Reload on a protected page**: re-sign-in is requested, and the list params from the URL are
    applied afterwards.

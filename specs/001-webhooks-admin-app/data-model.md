@@ -86,7 +86,7 @@ screen can return to the same list view.
 
 | Param | Type | Purpose |
 | --- | --- | --- |
-| `redirect` | string (internal path, must start with `/` and not `//`) | where to go after sign-in |
+| `redirect` | string; used only if `new URL(redirect, location.origin)` has the app's origin (research R7) | where to go after sign-in (`pathname + search` of that URL) |
 | `reason` | `'expired'` (optional) | show "Сесія завершилась" |
 
 ### Device identifier
@@ -109,7 +109,10 @@ screen can return to the same list view.
 
 Helpers: `resetDb()` and `expireSession()` for tests (an expired session can still be renewed by
 rotate). `endSession()` clears the session so that rotate returns `400`; it is exposed in dev as
-`window.__mock.endSession()` for the manual check.
+`window.__mock.endSession()` for the manual check. `failNextUpdate()` sets a one-shot flag: the
+next valid `PUT /v1/webhooks/:id` returns `422` with `payload.url: ['The url must be a valid URL.']`
+(contract-compliant response; `resetDb()` clears the flag). It is exposed in dev as
+`window.__mock.failNextUpdate()` so the edit form's server-error mapping can be checked by hand.
 
 ## Session state transitions (mock)
 

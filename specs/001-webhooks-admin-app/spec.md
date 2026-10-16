@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-16
 
-**Status**: Draft
+**Status**: Ready
 
 **Input**: User description: "файл ./docs/smart-sender-senior-frontend-test.md" — a small application with sign-in, a webhook list and webhook editing, running against a simulated API that follows the contract defined in that document.
 
@@ -105,8 +105,9 @@ reported next to the specific field — both by immediate client-side checks and
 
 **Why this priority**: completes the CRUD-lite flow and the "forms and errors" criterion; depends on US1 and US3.
 
-**Independent Test**: open a webhook, clear the name → field error; enter `ftp://x` as URL and save →
-server error shown under URL; enter valid values and save → success notice, list shows new values.
+**Independent Test**: open a webhook, clear the name → client field error; enter `ftp://x` as URL →
+client field error under URL; run the dev-only mock helper `__mock.failNextUpdate()` and save valid
+values → server error shown under URL; enter valid values and save → success notice, list shows new values.
 
 **Acceptance Scenarios**:
 
@@ -160,7 +161,7 @@ server error shown under URL; enter valid values and save → success notice, li
 
 - **FR-011**: Every request MUST carry the header identifying it as an XHR (`X-Requested-With: XMLHttpRequest`).
 - **FR-012**: Before the first other API request, the app MUST obtain the anti-forgery token once and send it on every state-changing (POST/PUT) request.
-- **FR-013**: On an anti-forgery rejection (419) the app SHOULD re-obtain the token and repeat the request at most once.
+- **FR-013**: On an anti-forgery rejection (419) the app MUST re-obtain the token and repeat the request at most once.
 
 **Webhook list**
 
@@ -179,7 +180,7 @@ server error shown under URL; enter valid values and save → success notice, li
 
 **Errors**
 
-- **FR-023**: Each error class MUST have exactly one handler: unauthenticated → session renewal (FR-006–008); anti-forgery → token refresh (FR-013); validation → form fields; not found → dedicated state; bad request / network / unknown / unexpected response shape → screen error state with retry. No global error pop-ups; only successful save produces a notice.
+- **FR-023**: Each error class MUST have exactly one handler: unauthenticated → session renewal (FR-006–008); anti-forgery → token refresh (FR-013); validation → form fields; not found → dedicated state; bad request / network / unknown / unexpected response shape → screen error state with retry for data loading; for form submissions (sign-in, webhook save) the same errors are shown as a form-level error and submitting again is the retry, so entered values are kept. No global error pop-ups; only successful save produces a notice.
 - **FR-024**: All server responses MUST be validated against the contract; a response not matching it MUST be treated as an unknown error.
 
 **Simulated API (mock)**
@@ -193,7 +194,7 @@ server error shown under URL; enter valid values and save → success notice, li
 **Verification and delivery**
 
 - **FR-030**: The project MUST include an automated test: two parallel requests rejected as unauthenticated → exactly one renewal → both repeated requests succeed.
-- **FR-031**: The README MUST describe how to run the app and the test, the test credentials, key decisions, unfinished items/trade-offs, and time spent.
+- **FR-031**: The README MUST describe how to run the app and the test, the test credentials, key decisions, unfinished items/trade-offs, how the solution would scale, time spent, and that development was spec-driven with Claude Code + Spec Kit.
 
 ### Key Entities
 
@@ -202,7 +203,12 @@ server error shown under URL; enter valid values and save → success notice, li
 - **Webhook page**: a slice of webhooks plus paging info — current and last page, total results after search, page size.
 - **Device identifier**: stable per-browser 32-hex identifier bound to sign-in and session operations.
 - **Session**: server-held, 30-second lifetime, renewable, revocable; invisible to the app.
-- **API error**: typed error with a category (bad request, unauthenticated, not found, token mismatch, validation), message and, for validation, per-field messages.
+- **API error**: typed error with a category — server categories (bad request, unauthenticated, not found, token mismatch, validation) plus client-side categories (network failure, response not matching the contract, unknown status) — a message and, for validation, per-field messages.
+
+**Terminology** (this spec uses plain language; plan and code use the technical terms):
+session renewal = *rotate* (`/auth/token/rotate`); start session = *issue*; sign-out = *revoke*;
+anti-forgery token = *CSRF token* (`X-CSRF-TOKEN`, rejection status 419); one-time device session
+token = `device_session_token`; device identifier = `fingerprint`; unauthenticated rejection = 401.
 
 ## Success Criteria *(mandatory)*
 
@@ -212,7 +218,7 @@ server error shown under URL; enter valid values and save → success notice, li
 - **SC-002**: During a 3-minute working session (several session expiries), the user is never sent back to sign-in and sees no error caused by expiry.
 - **SC-003**: In 100% of runs, N concurrent expired requests produce exactly 1 renewal and N successful retries (verified by the automated test for N = 2).
 - **SC-004**: Reloading or using back/forward on any list view restores the same page and search in 100% of manual checks.
-- **SC-005**: Every server validation error for name or URL is displayed next to its field in 100% of manual checks.
+- **SC-005**: Every server validation error for name or URL is displayed next to its field in 100% of manual checks (the edit-form server error is triggered with the dev-only mock helper, because client rules mirror the server).
 - **SC-006**: After sign-out or forced session end, no previously loaded user or webhook data is visible or retrievable in the app, and browser storage contains only the device identifier.
 - **SC-007**: The project's type-check, lint and test steps finish with zero errors and zero warnings.
 - **SC-008**: The core scope (US1–US2 and the mandatory test) is complete within the 4-hour budget; any unfinished item is listed in the README.
