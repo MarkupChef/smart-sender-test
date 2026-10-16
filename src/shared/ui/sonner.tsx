@@ -28,11 +28,6 @@ const Toaster = (props: ToasterProps) => {
         loading: <Loader2Icon className="size-4 animate-spin" />,
       }}
       style={toastVars}
-      toastOptions={{
-        classNames: {
-          toast: 'cn-toast',
-        },
-      }}
       {...props}
     />
   );

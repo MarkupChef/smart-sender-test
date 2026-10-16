@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  // Mirrors tsconfig.app.json and vite.config.ts: the shadcn CLI and editors read the alias here.
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"]

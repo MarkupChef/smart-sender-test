@@ -3,26 +3,55 @@ import prettier from 'eslint-config-prettier';
 import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import globals from 'globals';
+import fs from 'node:fs';
+import path from 'node:path';
 import tseslint from 'typescript-eslint';
 
 // Module boundaries (constitution Principle VI): app → features → api | shared.
 // Each zone lists everything it must not import; a later block replaces the rule
 // for its files, so every zone is complete on its own.
-const forbid = (...patterns) => ['error', { patterns }];
+const forbid = (...patterns) => ['error', { patterns: patterns.flat() }];
+
+// Bans a top-level src dir by alias and by relative path. Relative specifiers are not
+// resolved by the rule, so they match on any path segment named `dir`.
+// `except` is a regex fragment placed right after `dir`, e.g. a negative lookahead.
+const dirImport = (dir, message, except = '') => [
+  { regex: `^@/${dir}${except}(/|$)`, message },
+  { regex: `^\\.{1,2}/(.*/)?${dir}${except}(/|$)`, message },
+];
 
 const reactAndTanstack = {
   group: ['react', 'react-dom', 'react/*', 'react-dom/*', '@tanstack/*'],
   message: 'src/api is framework-agnostic: no React or TanStack (Principle III).',
 };
-const appImport = { group: ['@/app', '@/app/*'], message: 'Only main.tsx and app may use app.' };
-const featuresFromApi = {
-  group: ['@/features', '@/features/*'],
-  message: 'api must not depend on features.',
-};
-const mocksImport = {
-  group: ['@/mocks', '@/mocks/*'],
-  message: 'Only src/main.tsx and api tests may import mocks.',
-};
+const appImport = dirImport('app', 'Only main.tsx and app may use app.');
+const featuresFromApi = dirImport('features', 'api must not depend on features.');
+const mocksImport = dirImport('mocks', 'Only src/main.tsx and api tests may import mocks.');
+
+// One block per feature dir, so a new feature is isolated without touching this file.
+const featuresDir = path.join(import.meta.dirname, 'src/features');
+const features = fs.existsSync(featuresDir)
+  ? fs
+      .readdirSync(featuresDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+  : [];
+const crossFeature = 'Features do not import each other.';
+const featureZones = features.map((feature) => ({
+  files: [`src/features/${feature}/**/*.{ts,tsx}`],
+  rules: {
+    'no-restricted-imports': forbid(
+      appImport,
+      mocksImport,
+      features
+        .filter((other) => other !== feature)
+        .flatMap((other) => [
+          { regex: `^@/features/${other}(/|$)`, message: crossFeature },
+          { regex: `^\\.{1,2}/(.*/)?${other}(/|$)`, message: crossFeature },
+        ]),
+    ),
+  },
+}));
 
 export default defineConfig([
   globalIgnores([
@@ -73,43 +102,48 @@ export default defineConfig([
     // One shared mock (Principle V): transport tests use the same server and db as the app.
     files: ['src/api/**/*.test.ts'],
     rules: {
-      'no-restricted-imports': forbid(reactAndTanstack, featuresFromApi, appImport, {
-        regex: '^@/mocks(?!/(server|db)$)',
-        message: 'api tests may import only @/mocks/server and @/mocks/db.',
-      }),
+      'no-restricted-imports': forbid(
+        reactAndTanstack,
+        featuresFromApi,
+        appImport,
+        dirImport(
+          'mocks',
+          'api tests may import only mocks/server and mocks/db.',
+          '(?!/(server|db)$)',
+        ),
+      ),
     },
   },
   {
-    files: ['src/features/auth/**/*.{ts,tsx}'],
+    files: ['src/features/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': forbid(appImport, mocksImport, {
-        group: ['@/features/webhooks', '@/features/webhooks/*'],
-        message: 'Features do not import each other.',
-      }),
+      'no-restricted-imports': forbid(appImport, mocksImport),
     },
   },
-  {
-    files: ['src/features/webhooks/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': forbid(appImport, mocksImport, {
-        group: ['@/features/auth', '@/features/auth/*'],
-        message: 'Features do not import each other.',
-      }),
-    },
-  },
+  ...featureZones,
   {
     files: ['src/shared/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': forbid(appImport, mocksImport, {
-        group: ['@/features', '@/features/*'],
-        message: 'shared must not depend on features.',
-      }),
+      'no-restricted-imports': forbid(
+        appImport,
+        mocksImport,
+        dirImport('features', 'shared must not depend on features.'),
+      ),
     },
   },
   {
     files: ['src/app/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': forbid(mocksImport),
+    },
+  },
+  {
+    // The entry point starts the mock worker and touches nothing else in mocks.
+    files: ['src/main.tsx'],
+    rules: {
+      'no-restricted-imports': forbid(
+        dirImport('mocks', 'main.tsx may import only mocks/browser.', '(?!/browser$)'),
+      ),
     },
   },
   {
