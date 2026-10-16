@@ -125,7 +125,11 @@ export function createHttpClient(options: {
         else if (lastRotateFailed) throw endSession();
         continue;
       }
-      if (!response.ok) throw await toApiError(response);
+      if (!response.ok) {
+        const error = await toApiError(response);
+        opts.signal?.throwIfAborted();
+        throw error;
+      }
       return response;
     }
   }
@@ -139,6 +143,7 @@ export function createHttpClient(options: {
     if (opts.schema === undefined) return undefined;
 
     const body: unknown = await response.json().catch(() => undefined);
+    opts.signal?.throwIfAborted();
     const parsed = opts.schema.safeParse(body);
     if (!parsed.success) {
       if (import.meta.env.DEV) console.error(`Schema mismatch: ${opts.path}`, parsed.error.issues);

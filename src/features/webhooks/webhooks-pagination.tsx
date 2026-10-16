@@ -12,9 +12,10 @@ import {
 type PageSlot = number | 'gap-start' | 'gap-end';
 
 function pageSlots(current: number, last: number): PageSlot[] {
+  const isAnchor = (page: number) => page === 1 || page === last || Math.abs(page - current) <= 1;
   const slots: PageSlot[] = [];
   for (let page = 1; page <= last; page++) {
-    if (page === 1 || page === last || Math.abs(page - current) <= 1) {
+    if (isAnchor(page) || (isAnchor(page - 1) && isAnchor(page + 1))) {
       slots.push(page);
     } else if (page < current && slots.at(-1) !== 'gap-start') {
       slots.push('gap-start');
@@ -89,12 +90,7 @@ function StepLink({ page, last, label, children }: StepLinkProps) {
   }
   return (
     <Button asChild variant="ghost">
-      <Link
-        from="/webhooks"
-        search={(prev) => ({ ...prev, page })}
-        activeOptions={{ exact: true }}
-        aria-label={`${label} page`}
-      >
+      <Link from="/webhooks" search={(prev) => ({ ...prev, page })} aria-label={`${label} page`}>
         {children}
       </Link>
     </Button>

@@ -51,7 +51,11 @@ export function WebhooksPage() {
         </Alert>
       ) : list.data.data.length === 0 ? (
         <div className="grid justify-items-center gap-2 rounded-lg border p-8 text-center">
-          <p className="text-muted-foreground">Nothing found</p>
+          <p className="text-muted-foreground">
+            {list.data.paging.results.total > 0
+              ? `Page ${String(page)} does not exist`
+              : 'Nothing found'}
+          </p>
           {page > 1 && (
             <Link
               from="/webhooks"
@@ -65,10 +69,7 @@ export function WebhooksPage() {
       ) : (
         <>
           <WebhooksTable webhooks={list.data.data} isUpdating={list.isPlaceholderData} />
-          <WebhooksPagination
-            current={list.data.paging.pages.current}
-            last={list.data.paging.pages.last}
-          />
+          <WebhooksPagination current={page} last={list.data.paging.pages.last} />
         </>
       )}
     </section>
