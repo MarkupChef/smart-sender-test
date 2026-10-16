@@ -1,7 +1,5 @@
 import type { User, Webhook } from '@/api/schemas';
 
-// In-memory mock state (data-model.md "Mock state"). The session never leaves this module.
-
 export const CSRF_TOKEN = 'mock-csrf-token-7f3a';
 export const USER_PASSWORD = 'password123';
 export const user: User = {
@@ -58,11 +56,9 @@ function seedWebhooks(): Webhook[] {
 
 interface MockDb {
   webhooks: Webhook[];
-  /** device_session_token → fingerprint; issued by login, consumed once by issue. */
   deviceTokens: Map<string, string>;
   session: { fingerprint: string; expiresAt: number } | undefined;
   sessionTtlMs: number;
-  /** One-shot flag set by failNextUpdate(). */
   updateShouldFail: boolean;
 }
 
@@ -82,17 +78,14 @@ export function resetDb(): void {
   Object.assign(db, initialState());
 }
 
-/** The session is past its TTL but can still be renewed by rotate. */
 export function expireSession(): void {
   if (db.session) db.session.expiresAt = Date.now() - 1;
 }
 
-/** No session at all: rotate answers 400. */
 export function endSession(): void {
   db.session = undefined;
 }
 
-/** The next valid PUT /v1/webhooks/:id answers 422 on `url`. */
 export function failNextUpdate(): void {
   db.updateShouldFail = true;
 }

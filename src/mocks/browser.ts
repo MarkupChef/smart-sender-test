@@ -4,7 +4,6 @@ import { createHandlers } from './handlers';
 
 declare global {
   interface Window {
-    /** Dev-only switches for the manual checklist (quickstart.md). */
     __mock?: {
       endSession: () => void;
       expireSession: () => void;
@@ -13,7 +12,6 @@ declare global {
   }
 }
 
-/** `baseUrl` must be the one the http client uses, or requests bypass the mock. */
 export async function startMockWorker(baseUrl: string): Promise<void> {
   await setupWorker(...createHandlers(baseUrl)).start({
     onUnhandledFrame: 'bypass',

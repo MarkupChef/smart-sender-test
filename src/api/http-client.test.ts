@@ -111,7 +111,7 @@ describe('http client session handling', () => {
     endSession();
     server.use(
       http.get(`${TEST_BASE_URL}/v1/me`, async () => {
-        await delay(50); // answers after the rotate started by listWebhooks has failed
+        await delay(50);
         return unauthenticated();
       }),
     );

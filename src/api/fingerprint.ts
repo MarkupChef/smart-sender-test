@@ -1,7 +1,6 @@
 const STORAGE_KEY = 'fingerprint';
 const FINGERPRINT_PATTERN = /^[0-9a-f]{32}$/;
 
-// Read once per page load: a value another tab writes later must not change this tab's device id.
 let memoryFingerprint: string | undefined;
 
 function readStored(): string | undefined {
@@ -17,7 +16,6 @@ function generate(): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-/** Device id: the only value the app keeps in browser storage. */
 export function getFingerprint(): string {
   if (memoryFingerprint !== undefined) return memoryFingerprint;
 
@@ -31,7 +29,7 @@ export function getFingerprint(): string {
   try {
     localStorage.setItem(STORAGE_KEY, memoryFingerprint);
   } catch {
-    // Storage is unavailable: the in-memory value is used for this page load.
+    return memoryFingerprint;
   }
   return memoryFingerprint;
 }

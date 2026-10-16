@@ -2,14 +2,6 @@ import type { ZodType } from 'zod';
 import { ApiError, isApiError, toApiError } from './api-error';
 import { getFingerprint } from './fingerprint';
 
-// Transport (research R5, contracts/http-client.md). Guarantees:
-// - single-flight: concurrent first calls share one GET /csrf, concurrent 401s share one rotate;
-//   a 401 for a request sent before the latest rotate settled reuses its outcome instead of rotating;
-// - onSessionExpired fires once per settled rotate, however many requests end up rejected by it;
-// - a transient rotate failure (network, 5xx) is rethrown as is and does not end the session;
-// - rotate never rotates: it is sent with auth 'none', so its own failure cannot start a rotate;
-// - each request is retried at most once per error class (419 → new CSRF, 401 → rotate).
-
 export interface RequestOptions {
   method: 'GET' | 'POST' | 'PUT';
   path: string;
@@ -26,7 +18,6 @@ export interface HttpClient {
 const sessionExpired = () =>
   new ApiError({ type: 'AuthenticationException', message: 'The session has ended.' });
 
-// Only a server verdict on the session ends it; a lost connection or a 5xx may still be renewed.
 const isTransient = (error: unknown) =>
   !isApiError(error) ||
   error.info.type === 'NetworkError' ||
@@ -38,7 +29,7 @@ export function createHttpClient(options: {
 }): HttpClient {
   let csrfPromise: Promise<string> | undefined;
   let rotatePromise: Promise<void> | undefined;
-  let settledRotations = 0; // rotates that got a server verdict, successful or not
+  let settledRotations = 0;
   let lastRotateFailed = false;
   let notifiedRotation = -1;
 
@@ -118,8 +109,8 @@ export function createHttpClient(options: {
 
       if (response.status === 419 && !csrfRetried) {
         csrfRetried = true;
-        await response.body?.cancel(); // release the connection before the retry
-        if (csrfPromise === csrfRequest) csrfPromise = undefined; // concurrent 419s refetch once
+        await response.body?.cancel();
+        if (csrfPromise === csrfRequest) csrfPromise = undefined;
         continue;
       }
       if (response.status === 401 && opts.auth === 'session') {

@@ -12,7 +12,6 @@ import {
 
 const PAGE_SIZE = 10;
 
-// Typed endpoints (contracts/http-client.md). Auth endpoints add the fingerprint themselves (FR-004).
 export function createEndpoints(client: HttpClient) {
   return {
     login: (input: LoginInput) =>

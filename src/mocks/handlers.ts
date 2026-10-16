@@ -5,9 +5,6 @@ import { z } from 'zod';
 import { webhookInputSchema, type ErrorType } from '@/api/schemas';
 import { CSRF_TOKEN, db, user, USER_PASSWORD } from './db';
 
-// Contract: specs/001-webhooks-admin-app/contracts/http-api.md
-// Over ~150 lines on purpose: one file mirrors the contract table 1:1, so it reads as a spec.
-
 type Resolve = (request: Request, params: PathParams) => Response | Promise<Response>;
 
 const bodySchema = z.record(z.string(), z.unknown()).catch({});
@@ -37,7 +34,6 @@ function rejectHeaders(request: Request): Response | undefined {
   if (request.headers.get('X-Requested-With') !== 'XMLHttpRequest') {
     return error(400, 'BadRequestException', 'The X-Requested-With header is required.');
   }
-  // CSRF is checked before any other validation.
   if (request.method !== 'GET' && request.headers.get('X-CSRF-TOKEN') !== CSRF_TOKEN) {
     return error(419, 'TokenMismatchException', 'CSRF token mismatch.');
   }
@@ -104,7 +100,6 @@ export function createHandlers(baseUrl: string) {
       return empty(200);
     }),
 
-    // Rotate renews an expired session too; it fails only without a session or on a foreign device.
     route('post', '/auth/token/rotate', async (request) => {
       const { fingerprint } = await readBody(request);
       if (!db.session || db.session.fingerprint !== fingerprint) {
@@ -143,7 +138,6 @@ export function createHandlers(baseUrl: string) {
         : error(404, 'NotFoundException', 'Webhook not found.');
     }),
 
-    // Order of checks: CSRF → session → existence → validation.
     protectedRoute('put', '/v1/webhooks/:id', async (request, params) => {
       const index = findWebhookIndex(params);
       const webhook = db.webhooks[index];

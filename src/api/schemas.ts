@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-// Wire contract (data-model.md). Types come only from z.infer (Principle VII).
-
 export const userSchema = z.object({
   id: z.int(),
   email: z.email(),
@@ -38,7 +36,6 @@ export const errorEnvelopeSchema = z.object({
   error: z.object({
     type: errorTypeSchema,
     message: z.string(),
-    // External null is normalised to undefined at the boundary.
     payload: z
       .record(z.string(), z.array(z.string()))
       .nullish()
