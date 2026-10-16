@@ -141,8 +141,9 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
 - **Decision**: the edit screen is the route `/webhooks/$webhookId`. It validates the *same* list
   search schema, so links from the list carry `page`/`search` along. "Back to list" and
   post-save navigation go to `/webhooks` with those params. After saving, the detail cache is set
-  from the `PUT` response, `['webhooks','list']` is invalidated, and a sonner toast
-  "Saved" is shown.
+  from the `PUT` response, the row is patched in every cached `['webhooks','list']` page and
+  the list is then invalidated, and a sonner toast "Saved" is shown from the hook-level
+  `onSuccess` (it still fires if the form unmounts mid-request).
 - **Rationale**: this matches spec US4-6, survives reload, and needs no history tricks.
 - **Alternatives**: a modal (no URL, no natural 404 state, rejected in spec Assumptions);
   `history.back()` (breaks when the edit page was opened directly).

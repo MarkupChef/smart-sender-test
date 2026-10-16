@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import type { Webhook } from '@/api/schemas';
 import { cn } from '@/shared/cn';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
@@ -20,7 +21,17 @@ export function WebhooksTable({ webhooks, isUpdating }: WebhooksTableProps) {
       <TableBody>
         {webhooks.map((webhook) => (
           <TableRow key={webhook.id}>
-            <TableCell className="font-medium">{webhook.name}</TableCell>
+            <TableCell className="font-medium">
+              <Link
+                from="/webhooks"
+                to="/webhooks/$webhookId"
+                params={{ webhookId: String(webhook.id) }}
+                search={true}
+                className="text-primary underline-offset-4 hover:underline"
+              >
+                {webhook.name}
+              </Link>
+            </TableCell>
             <TableCell className="max-w-xs truncate text-muted-foreground" title={webhook.url}>
               {webhook.url}
             </TableCell>
