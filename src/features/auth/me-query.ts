@@ -6,7 +6,7 @@ export const meQueryKey = ['me'] as const;
 export function meQueryOptions(api: Api) {
   return queryOptions({
     queryKey: meQueryKey,
-    queryFn: () => api.getMe(),
+    queryFn: ({ signal }) => api.getMe(signal),
     staleTime: Infinity,
     gcTime: Infinity,
   });

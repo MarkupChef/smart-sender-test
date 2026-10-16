@@ -1,19 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useRouteContext } from '@tanstack/react-router';
-import { meQueryKey } from './me-query';
+import { useRouteContext } from '@tanstack/react-router';
 
 export function useLogout() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const { api } = useRouteContext({ from: '__root__' });
+  const { api, endSession } = useRouteContext({ from: '__root__' });
 
   return useMutation({
-    mutationFn: () => api.revokeSession(),
-    onSettled: async () => {
+    mutationFn: async () => {
       await queryClient.cancelQueries();
-      queryClient.removeQueries({ queryKey: meQueryKey });
-      await navigate({ to: '/login', replace: true });
-      queryClient.clear();
+      await api.revokeSession();
     },
+    onSettled: () => endSession('signed-out'),
   });
 }

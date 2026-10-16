@@ -17,6 +17,7 @@ type RequestOptions = {
   body?: unknown;
   auth: 'session' | 'none';
   captcha?: boolean;
+  signal?: AbortSignal;            // passed to fetch; an aborted request rejects with the abort error (not ApiError) and never rotates
 };
 
 interface HttpClient {
@@ -64,17 +65,18 @@ other way round.
 login(input: { email; password }): Promise<{ device_session_token: string }>   // body + fingerprint
 issueSession(input: { device_session_token }): Promise<void>                    // body + fingerprint
 revokeSession(): Promise<void>                // body { fingerprint }
-getMe(): Promise<User>
-listWebhooks(params: { page: number; search: string }): Promise<WebhookList>   // limit fixed to 10
-getWebhook(id: number): Promise<Webhook>
+getMe(signal?): Promise<User>
+listWebhooks(params: { page: number; search: string }, signal?): Promise<WebhookList>   // limit fixed to 10
+getWebhook(id: number, signal?): Promise<Webhook>
 updateWebhook(id: number, input: { name; url }): Promise<Webhook>
 ```
 
-All of them reject only with `ApiError`.
+All of them reject only with `ApiError`, except a request aborted through its `signal` (GET
+endpoints forward the TanStack Query `queryFn` signal, so `cancelQueries()` aborts requests in flight).
 
 ## Consumers
 
 - `src/features/*` call endpoint functions from TanStack Query `queryFn`/`mutationFn`.
-- `src/app` creates the single client instance and wires `onSessionExpired` to clear the cache and
-  navigate to the login screen.
+- `src/app/router.tsx` creates the single client instance with `onSessionExpired` passed at
+  creation; it calls the shared `endSession('expired')` teardown (see ui-routes.md).
 - `src/mocks` imports schemas/types only, never the client.

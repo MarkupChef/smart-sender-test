@@ -8,6 +8,7 @@ export interface RequestOptions {
   body?: unknown;
   auth: 'session' | 'none';
   captcha?: boolean;
+  signal?: AbortSignal;
 }
 
 export interface HttpClient {
@@ -51,8 +52,10 @@ export function createHttpClient(options: {
         method: opts.method,
         headers,
         body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+        signal: opts.signal,
       });
-    } catch {
+    } catch (error) {
+      if (opts.signal?.aborted) throw error;
       throw new ApiError({ type: 'NetworkError', message: 'The network request failed.' });
     }
   }
@@ -115,6 +118,7 @@ export function createHttpClient(options: {
       }
       if (response.status === 401 && opts.auth === 'session') {
         await response.body?.cancel();
+        opts.signal?.throwIfAborted();
         if (authRetried) throw endSession();
         authRetried = true;
         if (rotationsBeforeSend === settledRotations) await rotateOnce();

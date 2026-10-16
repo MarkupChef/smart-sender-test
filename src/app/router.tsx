@@ -7,15 +7,24 @@ import {
   redirect,
 } from '@tanstack/react-router';
 import { z } from 'zod';
-import type { Api } from '@/api/endpoints';
+import { createEndpoints, type Api } from '@/api/endpoints';
+import { createHttpClient } from '@/api/http-client';
 import { LoginPage } from '@/features/auth/login-page';
 import { meQueryKey } from '@/features/auth/me-query';
 import type { User } from '@/api/schemas';
-import { api, setSessionExpiredHandler } from './http';
+import { API_BASE_URL } from './http';
 import { ProtectedLayout } from './protected-layout';
 import { queryClient } from './query-client';
 
-const rootRoute = createRootRouteWithContext<{ queryClient: QueryClient; api: Api }>()({
+type SessionEndReason = 'expired' | 'signed-out';
+
+interface RouterContext {
+  queryClient: QueryClient;
+  api: Api;
+  endSession: (reason: SessionEndReason) => Promise<void>;
+}
+
+const rootRoute = createRootRouteWithContext<RouterContext>()({
   component: Outlet,
 });
 
@@ -69,31 +78,47 @@ const routeTree = rootRoute.addChildren([
   protectedRoute.addChildren([webhooksRoute]),
 ]);
 
-export const router = createRouter({
-  routeTree,
-  context: { queryClient, api },
-});
+const api = createEndpoints(
+  createHttpClient({
+    baseUrl: API_BASE_URL,
+    onSessionExpired: () => {
+      if (queryClient.getQueryData(meQueryKey) !== undefined) void endSession('expired');
+    },
+  }),
+);
 
-let expiryInProgress = false;
+let sessionEnding: Promise<void> | undefined;
 
-async function handleSessionExpired(): Promise<void> {
-  if (expiryInProgress || queryClient.getQueryData(meQueryKey) === undefined) {
-    return;
-  }
-  expiryInProgress = true;
+function endSession(reason: SessionEndReason): Promise<void> {
+  sessionEnding ??= tearDownSession(reason).finally(() => {
+    sessionEnding = undefined;
+  });
+  return sessionEnding;
+}
+
+async function tearDownSession(reason: SessionEndReason): Promise<void> {
+  const redirectTo = router.state.location.href;
   try {
-    const redirectTo = router.state.location.href;
     await queryClient.cancelQueries();
     queryClient.removeQueries({ queryKey: meQueryKey });
-    await router.navigate({ to: '/login', search: { reason: 'expired', redirect: redirectTo } });
-    queryClient.clear();
+    await (reason === 'expired'
+      ? router.navigate({
+          to: '/login',
+          search: { reason: 'expired', redirect: redirectTo },
+          replace: true,
+        })
+      : router.navigate({ to: '/login', replace: true }));
+  } catch (error) {
+    console.error(error);
+    window.location.replace('/login');
   } finally {
-    expiryInProgress = false;
+    queryClient.clear();
   }
 }
 
-setSessionExpiredHandler(() => {
-  void handleSessionExpired();
+export const router = createRouter({
+  routeTree,
+  context: { queryClient, api, endSession },
 });
 
 declare module '@tanstack/react-router' {
