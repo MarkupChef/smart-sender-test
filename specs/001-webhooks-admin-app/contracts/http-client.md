@@ -44,7 +44,7 @@ The client state lives inside the `createHttpClient` closure and is unique per c
 | G2 | `GET /csrf` runs before the first other request, at most once concurrently | optional |
 | G3 | POST/PUT carry `X-CSRF-TOKEN` | mock rejects otherwise |
 | G4 | N concurrent `401` → exactly one rotate → each request retried once | **required** |
-| G5 | Rotate never triggers rotate | **required** (T051) |
+| G5 | Rotate never triggers rotate (it is sent with `auth: 'none'`) | **required** (T051) |
 | G6 | Rotate rejected (4xx) or repeated `401` → `onSessionExpired()` once per settled rotate + `ApiError(AuthenticationException)` | **required** (T051), incl. concurrent and late-401 variants |
 | G6a | Rotate `NetworkError`/5xx → rethrown as is, session not ended | test |
 | G7 | `419` → one CSRF re-fetch (shared by concurrent 419s) → one retry | test |

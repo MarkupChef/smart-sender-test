@@ -38,7 +38,7 @@ search is debounced at 300 ms.
 
 **Constraints**: 4-hour budget (Principle II order). No tokens in state, URL or storage.
 Zero type, lint and test errors or warnings. `src/` nesting is at most 3 levels, with files of
-about 150 lines or less.
+about 200 lines or less. Code has no comments (constitution 2.0.0).
 
 **Scale/Scope**: 1 user, 28 webhooks, 3 screens (login, list, edit), the required 2×401 test plus
 two promoted rotate-safety tests (G5, G6) in Foundation, and up to 3 optional transport tests.
@@ -119,7 +119,7 @@ src/
 │       ├── list-search.ts       # zod search schema shared by list + edit routes
 │       ├── webhook-queries.ts   # list/detail query options, update mutation
 │       ├── webhooks-page.tsx    # list screen: states + table + pagination
-│       ├── webhooks-table.tsx   # optional extract if webhooks-page.tsx exceeds ~150 lines
+│       ├── webhooks-table.tsx   # optional extract if webhooks-page.tsx exceeds ~200 lines
 │       ├── webhook-search-input.tsx   # draft + debounce → URL (replace)
 │       ├── webhook-edit-page.tsx      # loading / not-found / error / form
 │       └── webhook-edit-form.tsx      # RHF + zod + server field errors
@@ -153,5 +153,5 @@ No principle violations. Recorded workflow deviation and two interpretations (Go
 | Deviation | Why needed | Simpler alternative rejected because |
 | --- | --- | --- |
 | US1 and US2 (Phases 3 and 4) share one GitHub issue / branch / PR (#3) instead of one issue each | Both are P1 and edit the same files (`src/app/router.tsx`, `src/app/protected-layout.tsx`); US2 is not demoable without US1 | Two PRs would touch the same router and layout code back-to-back, creating merge churn and a half-finished session flow on `main` between them |
-| Exhaustive `ApiError` switches in the login and edit forms (Principle VII) name `AuthenticationException` and `TokenMismatchException`, although UI must not know about 401/419 (Principle III) | `satisfies never` needs every union member in a branch | Both types sit in one fall-through branch with the other non-422 types and a comment that the transport owns them; the UI never reacts to 401/419 specifically. A `default` branch would drop exhaustiveness checking |
+| Exhaustive `ApiError` switches in the login and edit forms (Principle VII) name `AuthenticationException` and `TokenMismatchException`, although UI must not know about 401/419 (Principle III) | `satisfies never` needs every union member in a branch | Both types sit in one fall-through branch with the other non-422 types (transport-owned, see this row); the UI never reacts to 401/419 specifically. A `default` branch would drop exhaustiveness checking |
 | Non-422 mutation errors (400 / network / unknown) on login and edit are shown as a form-level `root` error, not as a screen error state; resubmitting the form serves as "Повторити" (Principle VIII table) | The form is the screen for a mutation; replacing it with an error state would discard the user's input | A separate error screen plus a retry button would duplicate the submit action and lose unsaved field values |
