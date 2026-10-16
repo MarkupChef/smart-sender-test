@@ -46,8 +46,8 @@ export const errorEnvelopeSchema = z.object({
 export const loginResponseSchema = z.object({ device_session_token: z.string() });
 
 export const loginInputSchema = z.object({
-  email: z.email('Введіть коректний email'),
-  password: z.string().min(1, 'Введіть пароль'),
+  email: z.email('Enter a valid email'),
+  password: z.string().min(1, 'Enter your password'),
 });
 
 function isHttpUrl(value: string): boolean {
@@ -57,8 +57,8 @@ function isHttpUrl(value: string): boolean {
 }
 
 export const webhookInputSchema = z.object({
-  name: z.string().trim().min(1, 'Введіть назву'),
-  url: z.string().trim().refine(isHttpUrl, 'Введіть коректний URL (http:// або https://)'),
+  name: z.string().trim().min(1, 'Enter a name'),
+  url: z.string().trim().refine(isHttpUrl, 'Enter a valid URL (http:// or https://)'),
 });
 
 export type User = z.infer<typeof userSchema>;

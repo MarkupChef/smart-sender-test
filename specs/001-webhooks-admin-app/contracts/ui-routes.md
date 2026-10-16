@@ -3,15 +3,15 @@
 | Path | Guard | Search params (zod `validateSearch`) | Screen states |
 | --- | --- | --- | --- |
 | `/` | — | — | redirect → `/webhooks` |
-| `/login` | if `me` is cached → redirect to `redirect` or `/webhooks` | `redirect?`: internal path; `reason?`: `'expired'` | form; field errors; root error; "Сесія завершилась" banner |
-| `/webhooks` | requires `me` in cache, else → `/login?redirect=<current href>` | `page` (int ≥ 1, default 1), `search` (string, default `''`); defaults stripped | loading (skeleton), empty ("Нічого не знайдено"), error + "Повторити", success (table + pagination) |
-| `/webhooks/$webhookId` | same as above; `$webhookId` parsed as positive int, else not-found | same list params (to return to the same view) | loading, not-found ("Вебхук не знайдено" + link), error + "Повторити", form |
+| `/login` | if `me` is cached → redirect to `redirect` or `/webhooks` | `redirect?`: internal path; `reason?`: `'expired'` | form; field errors; root error; "Session expired" banner |
+| `/webhooks` | requires `me` in cache, else → `/login?redirect=<current href>` | `page` (int ≥ 1, default 1), `search` (string, default `''`); defaults stripped | loading (skeleton), empty ("Nothing found"), error + "Retry", success (table + pagination) |
+| `/webhooks/$webhookId` | same as above; `$webhookId` parsed as positive int, else not-found | same list params (to return to the same view) | loading, not-found ("Webhook not found" + link), error + "Retry", form |
 
 ## Layout
 
 - The protected layout has a header with a text wordmark "Smart Sender", `me.name` (from the route
-  context returned by the guard), and a "Вийти" button.
-- There are no global error toasts. A sonner toast "Збережено" is shown only after a successful save.
+  context returned by the guard), and a "Sign out" button.
+- There are no global error toasts. A sonner toast "Saved" is shown only after a successful save.
 
 ## Navigation semantics
 

@@ -87,7 +87,7 @@ screen can return to the same list view.
 | Param | Type | Purpose |
 | --- | --- | --- |
 | `redirect` | string; used only if `new URL(redirect, location.origin)` has the app's origin (research R7) | where to go after sign-in (`pathname + search` of that URL) |
-| `reason` | `'expired'` (optional) | show "Сесія завершилась" |
+| `reason` | `'expired'` (optional) | show "Session expired" |
 
 ### Device identifier
 

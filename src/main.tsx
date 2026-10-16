@@ -21,8 +21,8 @@ try {
   console.error(error);
   root.render(
     <p role="alert">
-      Не вдалося запустити застосунок: mock API недоступний у цьому браузері. Спробуйте інший
-      браузер або звичайне (не приватне) вікно.
+      Failed to start the app: the mock API is unavailable in this browser. Try another browser or a
+      regular (non-private) window.
     </p>,
   );
 }
