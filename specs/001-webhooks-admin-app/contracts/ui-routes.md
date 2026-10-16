@@ -9,8 +9,8 @@
 
 ## Layout
 
-- The protected layout has a header with a text wordmark "Smart Sender", `me.name`, and a "Вийти"
-  button.
+- The protected layout has a header with a text wordmark "Smart Sender", `me.name` (from the route
+  context returned by the guard), and a "Вийти" button.
 - There are no global error toasts. A sonner toast "Збережено" is shown only after a successful save.
 
 ## Navigation semantics
@@ -21,5 +21,6 @@
 | Type in search | after 300 ms: `navigate({ search: { search, page: 1 }, replace: true })` |
 | Open webhook | `<Link to="/webhooks/$webhookId" params search={{ page, search }}>` |
 | Back / after save | `navigate({ to: '/webhooks', search: { page, search } })` |
-| Session expired | `navigate({ to: '/login', search: { reason: 'expired', redirect } })` + cache cleared |
-| Logout | revoke (errors ignored) → cache cleared → `navigate({ to: '/login' })` |
+| Sign-in success | `navigate({ href: target.pathname + target.search, replace: true })` (`target = new URL(redirect, origin)`, same origin only) or `navigate({ to: '/webhooks', replace: true })` |
+| Session expired | remove `me` → `navigate({ to: '/login', search: { reason: 'expired', redirect } })` → cache cleared (idempotent) |
+| Logout | revoke (errors ignored) → remove `me` → `navigate({ to: '/login', replace: true })` → cache cleared |
