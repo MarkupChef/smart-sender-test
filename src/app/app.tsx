@@ -1,8 +1,14 @@
+import { QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider } from '@tanstack/react-router';
+import { Toaster } from '@/shared/ui/sonner';
+import { queryClient } from './query-client';
+import { router } from './router';
+
 export function App() {
   return (
-    <main className="mx-auto max-w-5xl p-8">
-      <h1 className="text-2xl">Smart Sender</h1>
-      <p className="text-muted-foreground">Вебхуки</p>
-    </main>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+      <Toaster />
+    </QueryClientProvider>
   );
 }
