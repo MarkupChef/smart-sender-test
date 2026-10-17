@@ -61,6 +61,8 @@ export default defineConfig([
     'specs',
     '.specify',
     '.claude',
+    '.agents',
+    '.codex',
     'docs',
   ]),
   {

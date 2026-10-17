@@ -5,5 +5,7 @@ public/mockServiceWorker.js
 specs
 .specify
 .claude
+.agents
+.codex
 docs
 .mcp.json

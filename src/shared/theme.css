@@ -6,7 +6,6 @@
 @import '@fontsource/open-sans/400.css';
 @import '@fontsource/open-sans/600.css';
 
-/* Smart Sender brand tokens mapped onto shadcn variables. Light theme only. */
 :root {
   --background: #ffffff;
   --foreground: #232323;

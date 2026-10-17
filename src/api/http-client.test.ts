@@ -126,6 +126,20 @@ describe('http client session handling', () => {
     expect(errors.map(errorType)).toEqual(['AuthenticationException', 'AuthenticationException']);
   });
 
+  it('concurrent calls after the session ended share one failed rotate and notify once', async () => {
+    const { api, onSessionExpired } = await signIn();
+    endSession();
+
+    const errors = await Promise.all([
+      api.getMe().catch((caught: unknown) => caught),
+      api.listWebhooks({ page: 1, search: '' }).catch((caught: unknown) => caught),
+    ]);
+
+    expect(rotateCalls).toBe(1);
+    expect(onSessionExpired).toHaveBeenCalledTimes(1);
+    expect(errors.map(errorType)).toEqual(['AuthenticationException', 'AuthenticationException']);
+  });
+
   it('a network error during rotate is rethrown and does not end the session', async () => {
     const { api, onSessionExpired } = await signIn();
     expireSession();
@@ -157,6 +171,36 @@ describe('http client session handling', () => {
 });
 
 describe('http client CSRF handling', () => {
+  it('two parallel first calls fetch the CSRF token once', async () => {
+    const api = createEndpoints(
+      createHttpClient({ baseUrl: TEST_BASE_URL, onSessionExpired: vi.fn<() => void>() }),
+    );
+
+    await Promise.all([api.login(credentials), api.login(credentials)]);
+
+    expect(csrfCalls).toBe(1);
+  });
+
+  it('a 419 on update refetches the CSRF token once and the update succeeds', async () => {
+    const { api } = await signIn();
+    server.use(
+      http.put(
+        `${TEST_BASE_URL}/v1/webhooks/1`,
+        () =>
+          HttpResponse.json(
+            { error: { type: 'TokenMismatchException', message: 'CSRF token mismatch.' } },
+            { status: 419 },
+          ),
+        { once: true },
+      ),
+    );
+
+    const updated = await api.updateWebhook(1, { name: 'Renamed', url: 'https://example.com/a' });
+
+    expect(csrfCalls).toBe(2);
+    expect(updated.name).toBe('Renamed');
+  });
+
   it('concurrent 419s share one CSRF refetch and each request is retried once', async () => {
     const api = createEndpoints(
       createHttpClient({ baseUrl: TEST_BASE_URL, onSessionExpired: vi.fn<() => void>() }),
