@@ -2,7 +2,7 @@ import type { ZodType } from 'zod';
 import { ApiError, isApiError, toApiError } from './api-error';
 import { getFingerprint } from './fingerprint';
 
-export interface RequestOptions {
+interface RequestOptions {
   method: 'GET' | 'POST' | 'PUT';
   path: string;
   body?: unknown;

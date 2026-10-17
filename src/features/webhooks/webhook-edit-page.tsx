@@ -1,52 +1,38 @@
-import { useQuery } from '@tanstack/react-query';
-import { Link, useParams, useRouteContext, useSearch } from '@tanstack/react-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link, useLoaderData, useRouteContext } from '@tanstack/react-router';
 import { isApiError } from '@/api/api-error';
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
+import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/ui/card';
 import { Skeleton } from '@/shared/ui/skeleton';
-import type { ListSearch } from './list-search';
+import { LINK_CLASS } from './link-class';
 import { WebhookEditForm } from './webhook-edit-form';
-import { webhookDetailQueryOptions } from './webhook-queries';
-
-const LINK_CLASS = 'text-sm text-primary underline-offset-4 hover:underline';
-
-const webhookIdPattern = /^[1-9]\d*$/;
-
-function parseWebhookId(raw: string): number | undefined {
-  if (!webhookIdPattern.test(raw)) return undefined;
-  const id = Number(raw);
-  return Number.isSafeInteger(id) ? id : undefined;
-}
+import { findCachedWebhook, webhookDetailQueryOptions } from './webhook-queries';
 
 export function WebhookEditPage() {
-  const params = useParams({ from: '/_protected/webhooks/$webhookId' });
-  const { page, search } = useSearch({ from: '/_protected/webhooks/$webhookId' });
-  const webhookId = parseWebhookId(params.webhookId);
-  const listSearch = { page, search };
+  const { webhookId } = useLoaderData({ from: '/_protected/webhooks/$webhookId' });
 
   return (
     <section className="grid max-w-xl gap-4">
-      <Link to="/webhooks" search={listSearch} className={LINK_CLASS}>
+      <Link from="/webhooks/$webhookId" to="/webhooks" search={true} className={LINK_CLASS}>
         ← Back to list
       </Link>
       {webhookId === undefined ? (
-        <WebhookNotFound listSearch={listSearch} />
+        <WebhookNotFound />
       ) : (
-        <WebhookEditContent key={webhookId} id={webhookId} listSearch={listSearch} />
+        <WebhookEditContent key={webhookId} id={webhookId} />
       )}
     </section>
   );
 }
 
-interface WebhookEditContentProps {
-  id: number;
-  listSearch: ListSearch;
-}
-
-function WebhookEditContent({ id, listSearch }: WebhookEditContentProps) {
+function WebhookEditContent({ id }: { id: number }) {
+  const queryClient = useQueryClient();
   const { api } = useRouteContext({ from: '__root__' });
-  const detail = useQuery(webhookDetailQueryOptions(api, id));
+  const detail = useQuery({
+    ...webhookDetailQueryOptions(api, id),
+    placeholderData: () => findCachedWebhook(queryClient, id),
+  });
 
   if (detail.isPending) {
     return (
@@ -60,13 +46,13 @@ function WebhookEditContent({ id, listSearch }: WebhookEditContentProps) {
 
   if (detail.isError && detail.data === undefined) {
     if (isApiError(detail.error) && detail.error.info.type === 'NotFoundException') {
-      return <WebhookNotFound listSearch={listSearch} />;
+      return <WebhookNotFound />;
     }
     return (
       <Alert variant="destructive">
         <AlertTitle>Could not load the webhook</AlertTitle>
-        <AlertDescription>
-          <p>Something went wrong. Please try again.</p>
+        <AlertDescription>Something went wrong. Please try again.</AlertDescription>
+        <AlertAction>
           <Button
             variant="outline"
             size="sm"
@@ -77,7 +63,7 @@ function WebhookEditContent({ id, listSearch }: WebhookEditContentProps) {
           >
             Retry
           </Button>
-        </AlertDescription>
+        </AlertAction>
       </Alert>
     );
   }
@@ -94,17 +80,17 @@ function WebhookEditContent({ id, listSearch }: WebhookEditContentProps) {
           <dt className="text-sm text-muted-foreground">Status</dt>
           <dd>{webhook.active ? 'Active' : 'Inactive'}</dd>
         </dl>
-        <WebhookEditForm webhook={webhook} listSearch={listSearch} />
+        <WebhookEditForm webhook={webhook} disabled={detail.isPlaceholderData} />
       </CardContent>
     </Card>
   );
 }
 
-function WebhookNotFound({ listSearch }: { listSearch: ListSearch }) {
+function WebhookNotFound() {
   return (
     <div className="grid justify-items-center gap-2 rounded-lg border p-8 text-center">
       <h1 className="font-heading text-xl font-semibold">Webhook not found</h1>
-      <Link to="/webhooks" search={listSearch} className={LINK_CLASS}>
+      <Link from="/webhooks/$webhookId" to="/webhooks" search={true} className={LINK_CLASS}>
         Back to webhooks
       </Link>
     </div>

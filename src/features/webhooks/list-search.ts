@@ -13,4 +13,4 @@ export const listSearchSchema = z.object({
 
 export type ListSearch = z.infer<typeof listSearchSchema>;
 
-export const listSearchDefaults = { page: 1, search: '' } satisfies ListSearch;
+export const listSearchDefaults: ListSearch = listSearchSchema.parse({});

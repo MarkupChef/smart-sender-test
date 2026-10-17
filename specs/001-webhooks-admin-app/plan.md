@@ -49,7 +49,7 @@ two promoted rotate-safety tests (G5, G6) in Foundation, and up to 3 optional tr
 
 | Principle | Gate | Pre-research | Post-design |
 | --- | --- | --- | --- |
-| I. Simplicity First | No abstractions before 3rd repetition; no factories/DI "just in case"; descriptive file names; ≤ 3 levels | ✅ | ✅ `createHttpClient` has 2 real callers (app, test) because of the base URL (R4). The search debounce and the list/edit error state are written inline (1 and 2 usages, below the 3rd-repetition threshold). |
+| I. Simplicity First | No abstractions before 3rd repetition (obvious duplicates may be extracted at the 2nd); no factories/DI "just in case"; descriptive file names; ≤ 3 levels | ✅ | ✅ `createHttpClient` has 2 real callers (app, test) because of the base URL (R4). The search debounce and the list/edit error state are written inline (1 and 2 usages, below the 3rd-repetition threshold). The 422 → `setError` mapping is shared in `shared/apply-server-error.ts` (2 near-verbatim copies, obvious duplicate). |
 | II. Core Correctness Over Scope | Session/rotate, CSRF, URL state, field errors, typing first; no growth infra | ✅ | ✅ Task order in `/speckit-tasks` follows transport → auth → list → edit → polish. |
 | III. Isolated Transport Layer | `fetch` client in `src/api`, no React/Query; XHR header; lazy single-flight CSRF; 419 → 1 retry; 401 → shared rotate → 1 retry; no rotate from rotate; zod at boundary; typed `ApiError`; Query retry off for 401/419 | ✅ | ✅ Algorithm in R5, contract in [contracts/http-client.md](./contracts/http-client.md); Query `retry: false` (R11). |
 | IV. Single Source of Truth | Server state → Query; list state → URL; forms → RHF; no global store; device token local var only; only `fingerprint` in storage; logout/expiry clears cache | ✅ | ✅ Auth signal = `me` in the cache (R6). The search `draft` is input text, not navigation state (R8). The `api` instance travels via router context, so features never import `app`. |
@@ -113,8 +113,8 @@ src/
 │   ├── auth/
 │   │   ├── login-page.tsx       # form + "session expired" banner
 │   │   ├── use-login.ts         # login → issue → me mutation (token stays local)
-│   │   ├── use-logout.ts        # revoke → remove me → /login → clear cache
-│   │   └── me-query.ts          # meQueryKey + meQueryOptions
+│   │   ├── use-logout.ts        # mutation over router-context signOut()
+│   │   └── me-query.ts          # meQueryOptions (typed key via .queryKey)
 │   └── webhooks/
 │       ├── list-search.ts       # zod search schema shared by list + edit routes
 │       ├── webhook-queries.ts   # list/detail query options, update mutation

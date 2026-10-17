@@ -1,67 +1,27 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { useForm, type UseFormSetError } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { isApiError } from '@/api/api-error';
 import { webhookInputSchema, type Webhook, type WebhookInput } from '@/api/schemas';
+import { applyServerError } from '@/shared/apply-server-error';
+import { FormField } from '@/shared/form-field';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Label } from '@/shared/ui/label';
-import type { ListSearch } from './list-search';
 import { useUpdateWebhook } from './webhook-queries';
 
 const GENERIC_ERROR = 'Could not save the webhook. Please try again.';
 
 function isWebhookField(field: string): field is keyof WebhookInput {
-  return field === 'name' || field === 'url';
-}
-
-function applyServerError(error: unknown, setError: UseFormSetError<WebhookInput>): void {
-  if (!isApiError(error)) {
-    setError('root.server', { message: GENERIC_ERROR });
-    return;
-  }
-  const { info } = error;
-  switch (info.type) {
-    case 'ValidationException': {
-      let rootMessage: string | undefined;
-      let hasFieldError = false;
-      for (const [field, messages] of Object.entries(info.fields)) {
-        const message = messages[0];
-        if (message === undefined) continue;
-        if (isWebhookField(field)) {
-          setError(field, { message });
-          hasFieldError = true;
-        } else {
-          rootMessage ??= message;
-        }
-      }
-      if (rootMessage === undefined && !hasFieldError) rootMessage = info.message;
-      if (rootMessage !== undefined) setError('root.server', { message: rootMessage });
-      return;
-    }
-    case 'AuthenticationException':
-      return;
-    case 'BadRequestException':
-    case 'NotFoundException':
-    case 'TokenMismatchException':
-    case 'NetworkError':
-    case 'SchemaMismatch':
-    case 'UnknownError':
-      setError('root.server', { message: GENERIC_ERROR });
-      return;
-    default:
-      info satisfies never;
-  }
+  return webhookInputSchema.keyof().safeParse(field).success;
 }
 
 interface WebhookEditFormProps {
   webhook: Webhook;
-  listSearch: ListSearch;
+  disabled: boolean;
 }
 
-export function WebhookEditForm({ webhook, listSearch }: WebhookEditFormProps) {
-  const navigate = useNavigate();
+export function WebhookEditForm({ webhook, disabled }: WebhookEditFormProps) {
+  const navigate = useNavigate({ from: '/webhooks/$webhookId' });
   const update = useUpdateWebhook(webhook.id);
   const {
     register,
@@ -72,15 +32,17 @@ export function WebhookEditForm({ webhook, listSearch }: WebhookEditFormProps) {
     resolver: zodResolver(webhookInputSchema),
     values: { name: webhook.name, url: webhook.url },
     resetOptions: { keepDirtyValues: true },
+    disabled,
   });
 
   const onSubmit = handleSubmit((input) => {
     update.mutate(input, {
       onSuccess: () => {
-        void navigate({ to: '/webhooks', search: listSearch });
+        void navigate({ to: '/webhooks', search: true });
       },
       onError: (error) => {
-        applyServerError(error, setError);
+        if (isApiError(error) && error.info.type === 'AuthenticationException') return;
+        applyServerError(error, setError, isWebhookField, GENERIC_ERROR);
       },
     });
   });
@@ -94,44 +56,28 @@ export function WebhookEditForm({ webhook, listSearch }: WebhookEditFormProps) {
           <AlertDescription>{rootError}</AlertDescription>
         </Alert>
       )}
-      <div className="grid gap-2">
-        <Label htmlFor="webhook-name">Name</Label>
-        <Input
-          id="webhook-name"
-          autoComplete="off"
-          aria-invalid={errors.name !== undefined}
-          aria-describedby={errors.name ? 'webhook-name-error' : undefined}
-          {...register('name')}
-        />
-        {errors.name && (
-          <p id="webhook-name-error" className="text-sm text-destructive">
-            {errors.name.message}
-          </p>
-        )}
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="webhook-url">URL</Label>
-        <Input
-          id="webhook-url"
-          type="url"
-          inputMode="url"
-          autoComplete="off"
-          aria-invalid={errors.url !== undefined}
-          aria-describedby={errors.url ? 'webhook-url-error' : undefined}
-          {...register('url')}
-        />
-        {errors.url && (
-          <p id="webhook-url-error" className="text-sm text-destructive">
-            {errors.url.message}
-          </p>
-        )}
-      </div>
+      <FormField
+        id="webhook-name"
+        label="Name"
+        autoComplete="off"
+        error={errors.name?.message}
+        {...register('name')}
+      />
+      <FormField
+        id="webhook-url"
+        label="URL"
+        type="url"
+        inputMode="url"
+        autoComplete="off"
+        error={errors.url?.message}
+        {...register('url')}
+      />
       <div className="flex gap-2">
-        <Button type="submit" disabled={update.isPending}>
+        <Button type="submit" disabled={disabled || update.isPending}>
           Save
         </Button>
         <Button asChild variant="outline">
-          <Link to="/webhooks" search={listSearch}>
+          <Link from="/webhooks/$webhookId" to="/webhooks" search={true}>
             Cancel
           </Link>
         </Button>
