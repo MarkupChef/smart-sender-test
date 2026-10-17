@@ -34,14 +34,14 @@ src/
   api/       framework-agnostic transport: http-client, ApiError, zod schemas, endpoints — no React
   mocks/     MSW handlers + in-memory db, shared by browser and tests
   features/  auth/, webhooks/ — features never import each other
-  shared/    shadcn ui primitives, theme.css, cn
+  shared/    shadcn ui primitives, form-field, theme.css, cn
 ```
 
 Dependency direction `app → features → api | shared`, enforced by ESLint `no-restricted-imports` in `eslint.config.js`. UI code never imports `mocks`; `api` tests may import only `mocks/server` and `mocks/db`.
 
 **Transport (`src/api/http-client.ts`)** owns all session logic: `X-Requested-With` header, lazy single-flight CSRF fetch sent on POST/PUT, `419` → re-fetch CSRF + one retry, `401` → await one shared rotate promise + one retry, never rotate from rotate, rotate failure / repeated 401 → `onSessionExpired`. Components and hooks never call `fetch` or handle 401/419; TanStack Query `retry` is off for them. All responses validated with zod; types come from `z.infer`; errors normalized into `ApiError` discriminated union.
 
-**Wiring**: `src/app/http.ts` exports `API_BASE_URL = window.location.origin`; `src/app/router.tsx` creates the client with `onSessionExpired` passed at creation, `api = createEndpoints(client)`, and the single-flight `endSession('expired' | 'signed-out')` teardown (abort queries → remove `me` → navigate `/login` with `replace` → `clear()` in `finally`). GET endpoints take the `queryFn` `signal`. `main.tsx` starts the MSW worker before rendering. Router context carries `{ queryClient, api, endSession }`; the `_protected` route guards on cached `me` query data and redirects to `/login?redirect=...`.
+**Wiring**: `src/app/http.ts` exports `API_BASE_URL = window.location.origin`; `src/app/router.tsx` creates the client with `onSessionExpired` passed at creation, `api = createEndpoints(client)`, and the single-flight `endSession('expired' | 'signed-out')` teardown (abort queries → remove `me` → navigate `/login` with `replace` → `clear()` in `finally`). GET endpoints take the `queryFn` `signal`. `main.tsx` starts the MSW worker before rendering. Logout is `signOut()` (abort queries → revoke, errors ignored → `endSession('signed-out')`; `onSessionExpired` ignored while it runs). Router context carries `{ queryClient, api, signOut }`; routes prefetch their queries in `loader` (`defaultPreload: 'intent'`); the `_protected` route guards on cached `me` query data and redirects to `/login?redirect=...`.
 
 **State ownership**: server state → TanStack Query; list `page`/`search` → URL only (zod `validateSearch`, search debounced with `replace`, pagination `push`); forms → react-hook-form + zod. No global store. `device_session_token` lives only as a local variable in the login flow; `localStorage` holds only `fingerprint`. Logout/expiry clears the whole query cache.
 
@@ -55,7 +55,7 @@ Dependency direction `app → features → api | shared`, enforced by ESLint `no
 - Forbidden in prod and tests: `any`, `@ts-ignore`, non-null `!`, `as` assertions (only `as const`). Narrow with zod / type guards.
 - `undefined`, never `null`; API `null` converted at the zod boundary.
 - Exhaustive union handling (`assertNever` / `satisfies never`).
-- No abstraction before the third repetition; no `utils/`/`helpers/` folders; kebab-case files, max 3 nesting levels in `src/`, ~200 lines per file.
+- No abstraction before the third repetition (obviously duplicated logic may be extracted at the second); no `utils/`/`helpers/` folders; kebab-case files, max 3 nesting levels in `src/`, ~200 lines per file.
 - UI strings in English, no i18n library. Brand colors only via tokens in `src/shared/theme.css`, no hex in components.
 
 ## Workflow

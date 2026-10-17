@@ -1,6 +1,10 @@
 <!--
 Sync Impact Report
-- Version change: 2.0.0 → 2.1.0 (MINOR: UI language Ukrainian → English)
+- Version change: 2.1.0 → 2.2.0 (MINOR: duplication rule relaxed for obvious duplicates)
+- Modified: I. Simplicity First — obviously duplicated logic MAY be extracted at the second
+  repetition (was: never before the third).
+- Propagated: CLAUDE.md, AGENTS.md, plan.md Constitution Check.
+- Earlier, 2.0.0 → 2.1.0 (MINOR: UI language Ukrainian → English)
 - Modified: Tech & UI constraints — UI language is English to match server error messages.
 - Propagated: UI strings in `src/`, `index.html` (`lang="en"`), spec.md, plan.md, tasks.md,
   research.md, data-model.md, quickstart.md, contracts/ui-routes.md.
@@ -41,6 +45,8 @@ This is the meta-principle. When two rules conflict, the one further left in
 
 - Abstractions (hooks, helpers, generic components) MUST NOT be extracted before the
   **third** repetition. Two similar pieces of code are preferable to a premature abstraction.
+  Exception: obviously duplicated logic (the same algorithm copied near-verbatim, where a fix
+  in one copy must be repeated in the other) MAY be extracted at the second repetition.
 - No "just in case" code: no generic factories, config objects, DI, plugin systems or
   middleware pipelines for a single implementation; no unused parameters or props.
 - Folder and file names MUST describe their content (`session-refresh.ts`,
@@ -223,4 +229,4 @@ src/
   clarifications.
 - Every PR self-review verifies compliance with these principles.
 
-**Version**: 2.1.0 | **Ratified**: 2026-10-16 | **Last Amended**: 2026-10-16
+**Version**: 2.2.0 | **Ratified**: 2026-10-16 | **Last Amended**: 2026-10-17
