@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useRouteContext, useSearch } from '@tanstack/react-router';
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
+import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Skeleton } from '@/shared/ui/skeleton';
+import { LINK_CLASS } from './link-class';
 import { webhookListQueryOptions } from './webhook-queries';
 import { WebhookSearchInput } from './webhook-search-input';
 import { WebhooksPagination } from './webhooks-pagination';
@@ -12,8 +13,9 @@ const SKELETON_ROWS = 10;
 
 export function WebhooksPage() {
   const { api } = useRouteContext({ from: '__root__' });
-  const { page, search } = useSearch({ from: '/_protected/webhooks' });
-  const list = useQuery(webhookListQueryOptions(api, { page, search }));
+  const listSearch = useSearch({ from: '/_protected/webhooks' });
+  const { page } = listSearch;
+  const list = useQuery(webhookListQueryOptions(api, listSearch));
 
   return (
     <section className="grid gap-4">
@@ -35,8 +37,8 @@ export function WebhooksPage() {
       ) : list.isError ? (
         <Alert variant="destructive">
           <AlertTitle>Could not load webhooks</AlertTitle>
-          <AlertDescription>
-            <p>Something went wrong. Please try again.</p>
+          <AlertDescription>Something went wrong. Please try again.</AlertDescription>
+          <AlertAction>
             <Button
               variant="outline"
               size="sm"
@@ -47,7 +49,7 @@ export function WebhooksPage() {
             >
               Retry
             </Button>
-          </AlertDescription>
+          </AlertAction>
         </Alert>
       ) : list.data.data.length === 0 ? (
         <div className="grid justify-items-center gap-2 rounded-lg border p-8 text-center">
@@ -57,11 +59,7 @@ export function WebhooksPage() {
               : 'Nothing found'}
           </p>
           {page > 1 && (
-            <Link
-              from="/webhooks"
-              search={(prev) => ({ ...prev, page: 1 })}
-              className="text-sm text-primary underline-offset-4 hover:underline"
-            >
+            <Link from="/webhooks" search={(prev) => ({ ...prev, page: 1 })} className={LINK_CLASS}>
               Go to first page
             </Link>
           )}

@@ -11,6 +11,14 @@ function readStored(): string | undefined {
   }
 }
 
+function writeStored(value: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, value);
+  } catch {
+    return;
+  }
+}
+
 function generate(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
@@ -26,10 +34,6 @@ export function getFingerprint(): string {
   }
 
   memoryFingerprint = generate();
-  try {
-    localStorage.setItem(STORAGE_KEY, memoryFingerprint);
-  } catch {
-    return memoryFingerprint;
-  }
+  writeStored(memoryFingerprint);
   return memoryFingerprint;
 }

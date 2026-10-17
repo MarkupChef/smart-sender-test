@@ -83,7 +83,7 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
 ## R6. Client-side "am I signed in?"
 
 - **Decision**: the presence of `me` in the TanStack Query cache is the only client auth signal.
-  The protected layout's `beforeLoad` checks `queryClient.getQueryData(meQueryKey)`. If it is
+  The protected layout's `beforeLoad` checks `queryClient.getQueryData(meQueryOptions(api).queryKey)`. If it is
   missing, it throws `redirect({ to: '/login', search: { redirect: location.href } })`. `/login`
   redirects away when `me` is cached.
 - **Rationale**: a session cannot survive reload (R3), so probing the server on a cold start would
@@ -97,15 +97,16 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
 
 - **Decision**: one teardown `endSession(reason: 'expired' | 'signed-out')` in `src/app/router.tsx`,
   passed to features through the router context, runs in order: `cancelQueries()` (aborts requests
-  in flight, `queryFn` forwards its `signal`) → `removeQueries({ queryKey: meQueryKey })` →
+  in flight, `queryFn` forwards its `signal`) → `removeQueries({ queryKey: meQueryOptions(api).queryKey })` →
   `await router.navigate({ to: '/login', replace: true })` (with `search: { reason: 'expired',
   redirect }` for expiry) → `queryClient.clear()` in `finally`; if navigation throws, the error is
   logged and `window.location.replace('/login')` is the fallback. A module-level `sessionEnding`
   promise makes it single-flight: concurrent expiry and logout share the first teardown, and it is
   reset when settled, so the next expiry after a new login is handled again. `onSessionExpired`
   (passed to `createHttpClient` at creation) ignores the call when `me` is not cached. The login
-  screen shows "Session expired" when `reason === 'expired'`. Logout aborts queries, calls
-  `revoke`, ignores its error, then runs `endSession('signed-out')`. The protected layout reads `me` from the route context
+  screen shows "Session expired" when `reason === 'expired'`. Logout (`signOut()` in the router context) aborts queries, calls
+  `revoke`, ignores its error, then runs `endSession('signed-out')`; while it runs,
+  `onSessionExpired` is ignored so a 401 during revoke cannot turn it into an expiry. The protected layout reads `me` from the route context
   returned by the guard's `beforeLoad`, not from `useQuery`.
 - **Rationale**: the URL is the single place for navigation state. `reason` is not a secret.
   Logout must leave the user signed out even when `revoke` fails (spec edge case). Removing only

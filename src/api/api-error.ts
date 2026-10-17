@@ -1,11 +1,8 @@
 import type { ZodError } from 'zod';
-import { errorEnvelopeSchema } from './schemas';
+import { errorEnvelopeSchema, type ErrorType } from './schemas';
 
 export type ApiErrorInfo =
-  | { type: 'BadRequestException'; message: string }
-  | { type: 'AuthenticationException'; message: string }
-  | { type: 'NotFoundException'; message: string }
-  | { type: 'TokenMismatchException'; message: string }
+  | { type: Exclude<ErrorType, 'ValidationException'>; message: string }
   | { type: 'ValidationException'; message: string; fields: Record<string, string[]> }
   | { type: 'NetworkError'; message: string }
   | { type: 'SchemaMismatch'; message: string; issues: ZodError['issues'] }

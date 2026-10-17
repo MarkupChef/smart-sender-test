@@ -19,8 +19,8 @@
 | --- | --- |
 | Change page | `navigate({ search: prev => ({ ...prev, page }) })` (push) |
 | Type in search | after 300 ms: `navigate({ search: { search, page: 1 }, replace: true })` |
-| Open webhook | `<Link to="/webhooks/$webhookId" params search={{ page, search }}>` |
-| Back / after save | `navigate({ to: '/webhooks', search: { page, search } })` |
+| Open webhook | `<Link to="/webhooks/$webhookId" params search={true}>` |
+| Back / after save | `navigate({ to: '/webhooks', search: true })` |
 | Sign-in success | `navigate({ href: target.pathname + target.search, replace: true })` (`target = new URL(redirect, origin)`, same origin only) or `navigate({ to: '/webhooks', replace: true })` |
 | Session expired | `endSession('expired')`: cancel (abort) queries → remove `me` → `navigate({ to: '/login', search: { reason: 'expired', redirect }, replace: true })` → cache cleared in `finally` |
-| Logout | cancel (abort) queries → revoke (errors ignored) → `endSession('signed-out')`: remove `me` → `navigate({ to: '/login', replace: true })` → cache cleared in `finally` |
+| Logout | `signOut()` from the router context: cancel (abort) queries → revoke (errors ignored) → `endSession('signed-out')`: remove `me` → `navigate({ to: '/login', replace: true })` → cache cleared in `finally` |

@@ -1,7 +1,9 @@
 import { Link } from '@tanstack/react-router';
 import type { Webhook } from '@/api/schemas';
 import { cn } from '@/shared/cn';
+import { Badge } from '@/shared/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
+import { LINK_CLASS } from './link-class';
 
 interface WebhooksTableProps {
   webhooks: Webhook[];
@@ -27,7 +29,7 @@ export function WebhooksTable({ webhooks, isUpdating }: WebhooksTableProps) {
                 to="/webhooks/$webhookId"
                 params={{ webhookId: String(webhook.id) }}
                 search={true}
-                className="text-primary underline-offset-4 hover:underline"
+                className={LINK_CLASS}
               >
                 {webhook.name}
               </Link>
@@ -36,24 +38,13 @@ export function WebhooksTable({ webhooks, isUpdating }: WebhooksTableProps) {
               {webhook.url}
             </TableCell>
             <TableCell>
-              <StatusBadge active={webhook.active} />
+              <Badge variant={webhook.active ? 'success' : 'muted'}>
+                {webhook.active ? 'Active' : 'Inactive'}
+              </Badge>
             </TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
-  );
-}
-
-function StatusBadge({ active }: { active: boolean }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex rounded-md px-2 py-0.5 text-xs font-medium',
-        active ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground',
-      )}
-    >
-      {active ? 'Active' : 'Inactive'}
-    </span>
   );
 }
