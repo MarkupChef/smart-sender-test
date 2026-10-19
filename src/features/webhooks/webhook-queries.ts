@@ -9,7 +9,7 @@ import { useRouteContext } from '@tanstack/react-router';
 import type { Api } from '@/api/endpoints';
 import { toast } from 'sonner';
 import type { Webhook, WebhookInput, WebhookList } from '@/api/schemas';
-import type { ListSearch } from './list-search';
+import type { ListSearch } from './list/list-search';
 
 const STALE_TIME_MS = 30_000;
 

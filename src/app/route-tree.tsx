@@ -10,14 +10,14 @@ import type { Api } from '@/api/endpoints';
 import { LoginPage } from '@/features/auth/login-page';
 import { loginSearchSchema } from '@/features/auth/login-search';
 import { meQueryOptions } from '@/features/auth/me-query';
-import { listSearchDefaults, listSearchSchema } from '@/features/webhooks/list-search';
-import { WebhookEditPage } from '@/features/webhooks/webhook-edit-page';
-import { parseWebhookId } from '@/features/webhooks/webhook-id';
+import { listSearchDefaults, listSearchSchema } from '@/features/webhooks/list/list-search';
+import { WebhookEditPage } from '@/features/webhooks/edit/webhook-edit-page';
+import { parseWebhookId } from '@/features/webhooks/edit/webhook-id';
 import {
   webhookDetailQueryOptions,
   webhookListQueryOptions,
 } from '@/features/webhooks/webhook-queries';
-import { WebhooksPage } from '@/features/webhooks/webhooks-page';
+import { WebhooksPage } from '@/features/webhooks/list/webhooks-page';
 import { ROUTES, ROUTE_IDS } from '@/shared/routes';
 import { ProtectedLayout } from './protected-layout';
 

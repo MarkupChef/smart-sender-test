@@ -8,7 +8,7 @@ import { FormField } from '@/shared/form-field';
 import { ROUTES } from '@/shared/routes';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
-import { useUpdateWebhook } from './webhook-queries';
+import { useUpdateWebhook } from '../webhook-queries';
 
 const GENERIC_ERROR = 'Could not save the webhook. Please try again.';
 

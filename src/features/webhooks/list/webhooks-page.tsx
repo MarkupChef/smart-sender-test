@@ -4,8 +4,8 @@ import { ROUTES, ROUTE_IDS } from '@/shared/routes';
 import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Skeleton } from '@/shared/ui/skeleton';
-import { LINK_CLASS } from './link-class';
-import { webhookListQueryOptions } from './webhook-queries';
+import { WEBHOOK_LINK_CLASS } from '../webhook-link-class';
+import { webhookListQueryOptions } from '../webhook-queries';
 import { WebhookSearchInput } from './webhook-search-input';
 import { WebhooksPagination } from './webhooks-pagination';
 import { WebhooksTable } from './webhooks-table';
@@ -63,7 +63,7 @@ export function WebhooksPage() {
             <Link
               from={ROUTES.webhooks}
               search={(prev) => ({ ...prev, page: 1 })}
-              className={LINK_CLASS}
+              className={WEBHOOK_LINK_CLASS}
             >
               Go to first page
             </Link>
