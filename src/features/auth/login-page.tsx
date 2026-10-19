@@ -49,7 +49,7 @@ export function LoginPage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-xl">Smart Sender</CardTitle>
+          <CardTitle className="text-xl">Smart Sender 2.0</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="grid gap-4" noValidate onSubmit={(event) => void onSubmit(event)}>

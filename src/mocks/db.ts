@@ -5,9 +5,9 @@ export const USER_PASSWORD = 'password123';
 export const user: User = {
   id: 1,
   email: 'admin@smartsender.test',
-  first_name: 'Olena',
-  last_name: 'Koval',
-  name: 'Olena Koval',
+  first_name: 'Ruslan',
+  last_name: 'Rastehaiev',
+  name: 'Ruslan Rastehaiev',
 };
 
 const WEBHOOK_NAMES = [
