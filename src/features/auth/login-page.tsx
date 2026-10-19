@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { loginInputSchema, type LoginInput } from '@/api/schemas';
 import { applyServerError } from '@/shared/apply-server-error';
 import { FormField } from '@/shared/form-field';
+import { ROUTES } from '@/shared/routes';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -16,7 +17,7 @@ function isLoginField(field: string): field is keyof LoginInput {
 }
 
 export function LoginPage() {
-  const search = useSearch({ from: '/login' });
+  const search = useSearch({ from: ROUTES.login });
   const navigate = useNavigate();
   const login = useLogin();
   const {
@@ -33,7 +34,7 @@ export function LoginPage() {
     login.mutate(input, {
       onSuccess: () => {
         void (search.redirect === undefined
-          ? navigate({ to: '/webhooks', replace: true })
+          ? navigate({ to: ROUTES.webhooks, replace: true })
           : navigate({ href: search.redirect, replace: true }));
       },
       onError: (error) => {

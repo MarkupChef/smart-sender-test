@@ -5,6 +5,7 @@ import { isApiError } from '@/api/api-error';
 import { webhookInputSchema, type Webhook, type WebhookInput } from '@/api/schemas';
 import { applyServerError } from '@/shared/apply-server-error';
 import { FormField } from '@/shared/form-field';
+import { ROUTES } from '@/shared/routes';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { useUpdateWebhook } from './webhook-queries';
@@ -21,7 +22,7 @@ interface WebhookEditFormProps {
 }
 
 export function WebhookEditForm({ webhook, disabled }: WebhookEditFormProps) {
-  const navigate = useNavigate({ from: '/webhooks/$webhookId' });
+  const navigate = useNavigate({ from: ROUTES.webhookEdit });
   const update = useUpdateWebhook(webhook.id);
   const {
     register,
@@ -38,7 +39,7 @@ export function WebhookEditForm({ webhook, disabled }: WebhookEditFormProps) {
   const onSubmit = handleSubmit((input) => {
     update.mutate(input, {
       onSuccess: () => {
-        void navigate({ to: '/webhooks', search: true });
+        void navigate({ to: ROUTES.webhooks, search: true });
       },
       onError: (error) => {
         if (isApiError(error) && error.info.type === 'AuthenticationException') return;
@@ -77,7 +78,7 @@ export function WebhookEditForm({ webhook, disabled }: WebhookEditFormProps) {
           Save
         </Button>
         <Button asChild variant="outline">
-          <Link from="/webhooks/$webhookId" to="/webhooks" search={true}>
+          <Link from={ROUTES.webhookEdit} to={ROUTES.webhooks} search={true}>
             Cancel
           </Link>
         </Button>

@@ -1,9 +1,10 @@
 import { Outlet, useRouteContext } from '@tanstack/react-router';
 import { useLogout } from '@/features/auth/use-logout';
+import { ROUTE_IDS } from '@/shared/routes';
 import { Button } from '@/shared/ui/button';
 
 export function ProtectedLayout() {
-  const { me } = useRouteContext({ from: '/_protected' });
+  const { me } = useRouteContext({ from: ROUTE_IDS.protected });
   const logout = useLogout();
 
   return (

@@ -95,7 +95,7 @@ constitution leaves open. No `NEEDS CLARIFICATION` items remain.
 
 ## R7. Session-expired and logout flow
 
-- **Decision**: one teardown `endSession(reason: 'expired' | 'signed-out')` in `src/app/router.tsx`,
+- **Decision**: one teardown `endSession(reason: 'expired' | 'signed-out')` in `src/app/session.ts`,
   passed to features through the router context, runs in order: `cancelQueries()` (aborts requests
   in flight, `queryFn` forwards its `signal`) → `removeQueries({ queryKey: meQueryOptions(api).queryKey })` →
   `await router.navigate({ to: '/login', replace: true })` (with `search: { reason: 'expired',

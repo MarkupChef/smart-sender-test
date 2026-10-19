@@ -1,4 +1,5 @@
 import { createLink } from '@tanstack/react-router';
+import { ROUTES } from '@/shared/routes';
 import {
   Pagination,
   PaginationContent,
@@ -46,7 +47,7 @@ export function WebhooksPagination({ current, last }: WebhooksPaginationProps) {
         <PaginationItem>
           {current > 1 ? (
             <PreviousLink
-              from="/webhooks"
+              from={ROUTES.webhooks}
               search={(prev) => ({ ...prev, page: current - 1 })}
               activeOptions={{ exact: true }}
             />
@@ -58,7 +59,7 @@ export function WebhooksPagination({ current, last }: WebhooksPaginationProps) {
           <PaginationItem key={slot}>
             {typeof slot === 'number' ? (
               <PageLink
-                from="/webhooks"
+                from={ROUTES.webhooks}
                 search={(prev) => ({ ...prev, page: slot })}
                 activeOptions={{ exact: true }}
                 isActive={slot === current}
@@ -73,7 +74,7 @@ export function WebhooksPagination({ current, last }: WebhooksPaginationProps) {
         <PaginationItem>
           {current < last ? (
             <NextLink
-              from="/webhooks"
+              from={ROUTES.webhooks}
               search={(prev) => ({ ...prev, page: current + 1 })}
               activeOptions={{ exact: true }}
             />

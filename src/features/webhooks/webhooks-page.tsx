@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useRouteContext, useSearch } from '@tanstack/react-router';
+import { ROUTES, ROUTE_IDS } from '@/shared/routes';
 import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Skeleton } from '@/shared/ui/skeleton';
@@ -13,7 +14,7 @@ const SKELETON_ROWS = 10;
 
 export function WebhooksPage() {
   const { api } = useRouteContext({ from: '__root__' });
-  const listSearch = useSearch({ from: '/_protected/webhooks' });
+  const listSearch = useSearch({ from: ROUTE_IDS.webhooks });
   const { page } = listSearch;
   const list = useQuery(webhookListQueryOptions(api, listSearch));
 
@@ -59,7 +60,11 @@ export function WebhooksPage() {
               : 'Nothing found'}
           </p>
           {page > 1 && (
-            <Link from="/webhooks" search={(prev) => ({ ...prev, page: 1 })} className={LINK_CLASS}>
+            <Link
+              from={ROUTES.webhooks}
+              search={(prev) => ({ ...prev, page: 1 })}
+              className={LINK_CLASS}
+            >
               Go to first page
             </Link>
           )}

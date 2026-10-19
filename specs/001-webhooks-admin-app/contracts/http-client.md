@@ -77,6 +77,6 @@ endpoints forward the TanStack Query `queryFn` signal, so `cancelQueries()` abor
 ## Consumers
 
 - `src/features/*` call endpoint functions from TanStack Query `queryFn`/`mutationFn`.
-- `src/app/router.tsx` creates the single client instance with `onSessionExpired` passed at
+- `src/app/session.ts` creates the single client instance with `onSessionExpired` passed at
   creation; it calls the shared `endSession('expired')` teardown (see ui-routes.md).
 - `src/mocks` imports schemas/types only, never the client.

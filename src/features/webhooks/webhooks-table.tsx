@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import type { Webhook } from '@/api/schemas';
 import { cn } from '@/shared/cn';
+import { ROUTES } from '@/shared/routes';
 import { Badge } from '@/shared/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
 import { LINK_CLASS } from './link-class';
@@ -25,8 +26,8 @@ export function WebhooksTable({ webhooks, isUpdating }: WebhooksTableProps) {
           <TableRow key={webhook.id}>
             <TableCell className="font-medium">
               <Link
-                from="/webhooks"
-                to="/webhooks/$webhookId"
+                from={ROUTES.webhooks}
+                to={ROUTES.webhookEdit}
                 params={{ webhookId: String(webhook.id) }}
                 search={true}
                 className={LINK_CLASS}

@@ -95,7 +95,9 @@ src/
 │   ├── app.tsx                  # providers: QueryClientProvider, RouterProvider, Toaster
 │   ├── query-client.ts          # QueryClient defaults (retry: false)
 │   ├── http.ts                  # the single createHttpClient instance + onSessionExpired wiring
-│   ├── router.tsx               # route tree, protected layout beforeLoad guard
+│   ├── router.tsx               # createRouter + context, Register declaration
+│   ├── route-tree.tsx           # route tree, protected layout beforeLoad guard
+│   ├── session.ts               # client + api, signOut, endSession teardown
 │   └── protected-layout.tsx     # header: wordmark, me.name (from route context), logout
 ├── api/
 │   ├── http-client.ts           # fetch transport: CSRF, rotate single-flight, retries
@@ -126,6 +128,7 @@ src/
 └── shared/
     ├── theme.css                # brand tokens → shadcn variables, fonts
     ├── cn.ts                    # shadcn `cn` helper (components.json `utils` alias)
+    ├── routes.ts                # ROUTES / ROUTE_IDS path constants
     └── ui/                      # shadcn primitives (button, input, label, table, …)
 ```
 
