@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { isApiError } from '@/api/api-error';
 import { webhookInputSchema, type Webhook, type WebhookInput } from '@/api/schemas';
 import { applyServerError } from '@/shared/apply-server-error';
-import { FormField } from '@/shared/form-field';
+import { InputField } from '../../../shared/input-field';
 import { ROUTES } from '@/shared/routes';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
@@ -57,14 +57,14 @@ export function WebhookEditForm({ webhook, disabled }: WebhookEditFormProps) {
           <AlertDescription>{rootError}</AlertDescription>
         </Alert>
       )}
-      <FormField
+      <InputField
         id="webhook-name"
         label="Name"
         autoComplete="off"
         error={errors.name?.message}
         {...register('name')}
       />
-      <FormField
+      <InputField
         id="webhook-url"
         label="URL"
         type="url"

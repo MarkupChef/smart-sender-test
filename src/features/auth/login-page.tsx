@@ -3,7 +3,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { loginInputSchema, type LoginInput } from '@/api/schemas';
 import { applyServerError } from '@/shared/apply-server-error';
-import { FormField } from '@/shared/form-field';
+import { InputField } from '../../shared/input-field';
 import { ROUTES } from '@/shared/routes';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
@@ -63,7 +63,7 @@ export function LoginPage() {
                 <AlertDescription>{rootError}</AlertDescription>
               </Alert>
             )}
-            <FormField
+            <InputField
               id="email"
               label="Email"
               type="email"
@@ -71,7 +71,7 @@ export function LoginPage() {
               error={errors.email?.message}
               {...register('email')}
             />
-            <FormField
+            <InputField
               id="password"
               label="Password"
               type="password"
