@@ -54,6 +54,8 @@ function seedWebhooks(): Webhook[] {
   });
 }
 
+const DEFAULT_SESSION_TTL_MS = 30_000;
+
 interface MockDb {
   webhooks: Webhook[];
   deviceTokens: Map<string, string>;
@@ -67,7 +69,7 @@ function initialState(): MockDb {
     webhooks: seedWebhooks(),
     deviceTokens: new Map(),
     session: undefined,
-    sessionTtlMs: 30_000,
+    sessionTtlMs: DEFAULT_SESSION_TTL_MS,
     updateShouldFail: false,
   };
 }
