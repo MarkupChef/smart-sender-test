@@ -1,16 +1,17 @@
 import { Outlet, useRouteContext } from '@tanstack/react-router';
 import { useLogout } from '@/features/auth/use-logout';
+import { ROUTE_IDS } from '@/shared/routes';
 import { Button } from '@/shared/ui/button';
 
 export function ProtectedLayout() {
-  const { me } = useRouteContext({ from: '/_protected' });
+  const { me } = useRouteContext({ from: ROUTE_IDS.protected });
   const logout = useLogout();
 
   return (
     <div className="min-h-svh">
       <header className="border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 p-4">
-          <span className="font-heading text-lg font-semibold">Smart Sender</span>
+          <span className="font-heading text-lg font-semibold">Smart Sender 2.0</span>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{me.name}</span>
             <Button

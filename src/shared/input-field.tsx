@@ -8,7 +8,7 @@ interface FormFieldProps extends ComponentProps<typeof Input> {
   error: string | undefined;
 }
 
-export function FormField({ id, label, error, ...inputProps }: FormFieldProps) {
+export function InputField({ id, label, error, ...inputProps }: FormFieldProps) {
   const errorId = `${id}-error`;
   return (
     <div className="grid gap-2">

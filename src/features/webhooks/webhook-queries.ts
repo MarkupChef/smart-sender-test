@@ -9,9 +9,9 @@ import { useRouteContext } from '@tanstack/react-router';
 import type { Api } from '@/api/endpoints';
 import { toast } from 'sonner';
 import type { Webhook, WebhookInput, WebhookList } from '@/api/schemas';
-import type { ListSearch } from './list-search';
+import type { ListSearch } from './list/list-search';
 
-const STALE_TIME_MS = 30_000;
+const WEBHOOK_STALE_TIME_MS = 30_000;
 
 const webhookKeys = {
   lists: ['webhooks', 'list'] as const,
@@ -24,7 +24,7 @@ export function webhookListQueryOptions(api: Api, listSearch: ListSearch) {
     queryKey: webhookKeys.list(listSearch),
     queryFn: ({ signal }) => api.listWebhooks(listSearch, signal),
     placeholderData: keepPreviousData,
-    staleTime: STALE_TIME_MS,
+    staleTime: WEBHOOK_STALE_TIME_MS,
   });
 }
 
@@ -32,7 +32,7 @@ export function webhookDetailQueryOptions(api: Api, id: number) {
   return queryOptions({
     queryKey: webhookKeys.detail(id),
     queryFn: ({ signal }) => api.getWebhook(id, signal),
-    staleTime: STALE_TIME_MS,
+    staleTime: WEBHOOK_STALE_TIME_MS,
   });
 }
 

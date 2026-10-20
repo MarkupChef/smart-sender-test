@@ -1,20 +1,26 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useLoaderData, useRouteContext } from '@tanstack/react-router';
 import { isApiError } from '@/api/api-error';
+import { ROUTES, ROUTE_IDS } from '@/shared/routes';
 import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader } from '@/shared/ui/card';
 import { Skeleton } from '@/shared/ui/skeleton';
-import { LINK_CLASS } from './link-class';
+import { WEBHOOK_LINK_CLASS } from '../webhook-link-class';
 import { WebhookEditForm } from './webhook-edit-form';
-import { findCachedWebhook, webhookDetailQueryOptions } from './webhook-queries';
+import { findCachedWebhook, webhookDetailQueryOptions } from '../webhook-queries';
 
 export function WebhookEditPage() {
-  const { webhookId } = useLoaderData({ from: '/_protected/webhooks/$webhookId' });
+  const { webhookId } = useLoaderData({ from: ROUTE_IDS.webhookEdit });
 
   return (
     <section className="grid max-w-xl gap-4">
-      <Link from="/webhooks/$webhookId" to="/webhooks" search={true} className={LINK_CLASS}>
+      <Link
+        from={ROUTES.webhookEdit}
+        to={ROUTES.webhooks}
+        search={true}
+        className={WEBHOOK_LINK_CLASS}
+      >
         ← Back to list
       </Link>
       {webhookId === undefined ? (
@@ -90,7 +96,12 @@ function WebhookNotFound() {
   return (
     <div className="grid justify-items-center gap-2 rounded-lg border p-8 text-center">
       <h1 className="font-heading text-xl font-semibold">Webhook not found</h1>
-      <Link from="/webhooks/$webhookId" to="/webhooks" search={true} className={LINK_CLASS}>
+      <Link
+        from={ROUTES.webhookEdit}
+        to={ROUTES.webhooks}
+        search={true}
+        className={WEBHOOK_LINK_CLASS}
+      >
         Back to webhooks
       </Link>
     </div>

@@ -3,7 +3,8 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useForm } from 'react-hook-form';
 import { loginInputSchema, type LoginInput } from '@/api/schemas';
 import { applyServerError } from '@/shared/apply-server-error';
-import { FormField } from '@/shared/form-field';
+import { InputField } from '../../shared/input-field';
+import { ROUTES } from '@/shared/routes';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -16,7 +17,7 @@ function isLoginField(field: string): field is keyof LoginInput {
 }
 
 export function LoginPage() {
-  const search = useSearch({ from: '/login' });
+  const search = useSearch({ from: ROUTES.login });
   const navigate = useNavigate();
   const login = useLogin();
   const {
@@ -33,7 +34,7 @@ export function LoginPage() {
     login.mutate(input, {
       onSuccess: () => {
         void (search.redirect === undefined
-          ? navigate({ to: '/webhooks', replace: true })
+          ? navigate({ to: ROUTES.webhooks, replace: true })
           : navigate({ href: search.redirect, replace: true }));
       },
       onError: (error) => {
@@ -48,7 +49,7 @@ export function LoginPage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-xl">Smart Sender</CardTitle>
+          <CardTitle className="text-xl">Smart Sender 2.0</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="grid gap-4" noValidate onSubmit={(event) => void onSubmit(event)}>
@@ -62,7 +63,7 @@ export function LoginPage() {
                 <AlertDescription>{rootError}</AlertDescription>
               </Alert>
             )}
-            <FormField
+            <InputField
               id="email"
               label="Email"
               type="email"
@@ -70,7 +71,7 @@ export function LoginPage() {
               error={errors.email?.message}
               {...register('email')}
             />
-            <FormField
+            <InputField
               id="password"
               label="Password"
               type="password"

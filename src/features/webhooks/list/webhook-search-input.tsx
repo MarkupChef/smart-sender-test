@@ -1,5 +1,6 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
+import { ROUTES, ROUTE_IDS } from '@/shared/routes';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { SEARCH_MAX_LENGTH } from './list-search';
@@ -7,8 +8,8 @@ import { SEARCH_MAX_LENGTH } from './list-search';
 const DEBOUNCE_MS = 300;
 
 export function WebhookSearchInput() {
-  const { page, search } = useSearch({ from: '/_protected/webhooks' });
-  const navigate = useNavigate({ from: '/webhooks' });
+  const { page, search } = useSearch({ from: ROUTE_IDS.webhooks });
+  const navigate = useNavigate({ from: ROUTES.webhooks });
   const [draft, setDraft] = useState(search);
   const [synced, setSynced] = useState({ page, search });
   const [sent, setSent] = useState<readonly string[]>([]);
